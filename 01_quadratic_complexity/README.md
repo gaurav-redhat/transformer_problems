@@ -1,26 +1,49 @@
 # Problem 1: Quadratic Complexity O(N²)
 
-## Problem
+[← Back to Main](../README.md) | [Next: Positional Awareness →](../02_positional_awareness/README.md)
 
-Self-attention computes an N×N matrix, causing memory and compute explosion for long sequences.
+---
 
-The self-attention mechanism requires computing attention scores between every pair of tokens in a sequence. For a sequence of length N, this results in O(N²) time and space complexity, making it impractical for very long sequences.
+![Problem 1](./problem.png)
 
-## Solutions
+## What's the Problem?
 
-| Solution | Description |
-|----------|-------------|
-| **Sparse Attention** | Only compute attention for a subset of token pairs using fixed or learned patterns |
-| **Longformer** | Combines local sliding window attention with global attention for selected tokens |
-| **Linformer** | Projects keys and values to lower dimensions, reducing complexity to O(N) |
-| **Performer** | Uses random feature approximation (FAVOR+) for linear attention |
-| **FlashAttention** | IO-aware exact attention algorithm that reduces memory reads/writes |
-| **Transformer-XL** | Segment-level recurrence with relative positional encodings |
+Here's the deal with transformers: every token needs to "look at" every other token. If you have a sentence with 1000 words, that's 1000 × 1000 = 1 million attention calculations. Double your sequence length? You've just quadrupled your compute.
 
-## References
+The math is simple but brutal:
+- 1K tokens → 1M operations
+- 10K tokens → 100M operations  
+- 100K tokens → 10B operations
 
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) - Original Transformer paper
-- [Longformer](https://arxiv.org/abs/2004.05150) - Long Document Transformer
-- [Linformer](https://arxiv.org/abs/2006.04768) - Self-Attention with Linear Complexity
-- [FlashAttention](https://arxiv.org/abs/2205.14135) - Fast and Memory-Efficient Exact Attention
+This is why early models like GPT-2 were stuck at 1024 tokens. It's not that researchers didn't want longer contexts — the math just didn't work.
 
+## Why Does This Happen?
+
+The self-attention formula looks innocent enough:
+
+```
+Attention(Q, K, V) = softmax(QK^T / √d_k) V
+```
+
+But that `QK^T` part? That's where you're multiplying a (N × d) matrix by a (d × N) matrix, giving you an (N × N) attention matrix. Every. Single. Layer.
+
+## How Do We Fix It?
+
+| Approach | The Idea |
+|----------|----------|
+| **Sparse Attention** | Don't compute all N² pairs — use patterns (local windows, strided, etc.) |
+| **Longformer** | Sliding window + global tokens for important positions |
+| **Linformer** | Project K and V to lower dimensions first |
+| **Performer** | Approximate softmax with random features (FAVOR+) |
+| **FlashAttention** | Same math, but way smarter memory access patterns |
+| **Transformer-XL** | Process in segments, reuse previous computations |
+
+## Learn More
+
+- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — The original paper
+- [Longformer](https://arxiv.org/abs/2004.05150) — Efficient attention for long documents
+- [FlashAttention](https://arxiv.org/abs/2205.14135) — The IO-aware approach everyone uses now
+
+---
+
+[← Back to Main](../README.md) | [Next: Positional Awareness →](../02_positional_awareness/README.md)
