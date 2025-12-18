@@ -2,6 +2,8 @@
 
 [← Back to Main](../README.md) | [← Previous](../12_no_recurrence/README.md) | [Next →](../14_noise_sensitivity/README.md)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/13_model_size/demo.ipynb)
+
 ---
 
 ![Problem 13](./problem.png)
