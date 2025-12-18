@@ -2,6 +2,8 @@
 
 [← Back to Main](../README.md) | [← Previous](../06_data_hungry/README.md) | [Next →](../08_compute_cost/README.md)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/07_memory_footprint/demo.ipynb)
+
 ---
 
 ![Problem 7](./problem.png)
