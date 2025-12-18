@@ -1,23 +1,59 @@
 # Problem 5: No Local Inductive Bias
 
-## Problem
+[← Back to Main](../README.md) | [← Previous](../04_slow_decoding/README.md) | [Next →](../06_data_hungry/README.md)
 
-No bias toward local patterns. Hurts vision and audio tasks where locality matters.
+---
 
-Unlike CNNs which have built-in locality through convolutions, Transformers treat all positions equally. This lack of inductive bias means they need more data to learn local patterns that are crucial for images and audio.
+![Problem 5](./problem.png)
 
-## Solutions
+## What's the Problem?
 
-| Solution | Description |
-|----------|-------------|
-| **CNN + Transformer** | Hybrid architectures combining convolutional and attention layers |
-| **Swin Transformer** | Shifted window attention for hierarchical local-global modeling |
-| **Conformer** | Combines convolution and self-attention for speech recognition |
-| **Hierarchical ViT** | Multi-scale vision transformers with local attention at early layers |
+When you look at an image, nearby pixels usually mean more than distant ones. A cat's ear pixels relate strongly to nearby fur pixels, not so much to the background sky.
 
-## References
+CNNs "get" this naturally — convolutions are local by design. Transformers? They treat position 1 and position 1000 with equal importance. Every token can attend to every other token equally.
 
-- [Swin Transformer](https://arxiv.org/abs/2103.14030) - Hierarchical Vision Transformer using Shifted Windows
-- [Conformer](https://arxiv.org/abs/2005.08100) - Convolution-augmented Transformer for Speech Recognition
-- [CoAtNet](https://arxiv.org/abs/2106.04803) - Marrying Convolution and Attention
+For images, this means ViT needs way more data than CNNs to learn that "nearby stuff matters more."
 
+## Why Does This Happen?
+
+Self-attention computes:
+```
+attention(i, j) = softmax(q_i · k_j)
+```
+
+Notice anything missing? There's no concept of distance between positions i and j. The model has to *learn* that nearby positions are often more relevant — it doesn't come for free.
+
+## Why Local Bias Helps
+
+In many domains, there's inherent locality:
+- **Images**: Objects are spatially coherent
+- **Audio**: Adjacent frames are related
+- **Text**: Nearby words form phrases
+
+Starting with this assumption (inductive bias) lets models learn faster with less data.
+
+## How Do We Fix It?
+
+| Approach | The Idea |
+|----------|----------|
+| **CNN + Transformer** | Use conv layers early (local), attention later (global) |
+| **Swin Transformer** | Attention only within local windows, shift windows between layers |
+| **Conformer** | Interleave convolution and attention blocks |
+| **Hierarchical ViT** | Start with small patches, merge them progressively |
+
+## The Hybrid Approach Works
+
+Most state-of-the-art vision models now combine both:
+- Convolutions capture local patterns efficiently
+- Attention captures global relationships
+
+Best of both worlds.
+
+## Learn More
+
+- [Swin Transformer](https://arxiv.org/abs/2103.14030) — Shifted windows
+- [ConvNeXt](https://arxiv.org/abs/2201.03545) — Modernized CNNs compete with transformers
+
+---
+
+[← Back to Main](../README.md) | [← Previous](../04_slow_decoding/README.md) | [Next →](../06_data_hungry/README.md)
