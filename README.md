@@ -70,24 +70,26 @@ Whether you're a student trying to understand transformers, an engineer deployin
 
 Jump to any problem:
 
-1. [Quadratic Complexity O(N²)](./01_quadratic_complexity/)
-2. [No Positional Awareness](./02_positional_awareness/)
-3. [Fixed Context Window](./03_fixed_context/)
-4. [Slow Autoregressive Decoding](./04_slow_decoding/)
-5. [No Local Inductive Bias](./05_local_bias/)
-6. [Data-Hungry Architecture](./06_data_hungry/)
-7. [High Memory Footprint](./07_memory_footprint/)
-8. [High Compute & Power Cost](./08_compute_cost/)
-9. [Poor Length Generalization](./09_length_generalization/)
-10. [Training Instability](./10_training_instability/)
-11. [Attention Over-Smoothing](./11_attention_smoothing/)
-12. [No Recurrence / Streaming](./12_no_recurrence/)
-13. [Large Model Size](./13_model_size/)
-14. [Sensitivity to Noise Tokens](./14_noise_sensitivity/)
-15. [Poor Interpretability](./15_interpretability/)
-16. [Inefficient for Dense Inputs](./16_dense_inputs/)
-17. [Hardware Inefficiency](./17_hardware_inefficiency/)
-18. [Real-Time Deployment](./18_realtime_deployment/)
+| # | Problem | Docs | Colab |
+|---|---------|------|-------|
+| 1 | Quadratic Complexity O(N²) | [📖 README](./01_quadratic_complexity/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/01_quadratic_complexity/demo.ipynb) |
+| 2 | No Positional Awareness | [📖 README](./02_positional_awareness/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/02_positional_awareness/demo.ipynb) |
+| 3 | Fixed Context Window | [📖 README](./03_fixed_context/) | Coming Soon |
+| 4 | Slow Autoregressive Decoding | [📖 README](./04_slow_decoding/) | Coming Soon |
+| 5 | No Local Inductive Bias | [📖 README](./05_local_bias/) | Coming Soon |
+| 6 | Data-Hungry Architecture | [📖 README](./06_data_hungry/) | Coming Soon |
+| 7 | High Memory Footprint | [📖 README](./07_memory_footprint/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/07_memory_footprint/demo.ipynb) |
+| 8 | High Compute & Power Cost | [📖 README](./08_compute_cost/) | Coming Soon |
+| 9 | Poor Length Generalization | [📖 README](./09_length_generalization/) | Coming Soon |
+| 10 | Training Instability | [📖 README](./10_training_instability/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/10_training_instability/demo.ipynb) |
+| 11 | Attention Over-Smoothing | [📖 README](./11_attention_smoothing/) | Coming Soon |
+| 12 | No Recurrence / Streaming | [📖 README](./12_no_recurrence/) | Coming Soon |
+| 13 | Large Model Size | [📖 README](./13_model_size/) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/13_model_size/demo.ipynb) |
+| 14 | Sensitivity to Noise Tokens | [📖 README](./14_noise_sensitivity/) | Coming Soon |
+| 15 | Poor Interpretability | [📖 README](./15_interpretability/) | Coming Soon |
+| 16 | Inefficient for Dense Inputs | [📖 README](./16_dense_inputs/) | Coming Soon |
+| 17 | Hardware Inefficiency | [📖 README](./17_hardware_inefficiency/) | Coming Soon |
+| 18 | Real-Time Deployment | [📖 README](./18_realtime_deployment/) | Coming Soon |
 
 ---
 
