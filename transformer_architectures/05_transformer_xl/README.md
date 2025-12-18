@@ -1,6 +1,6 @@
-# Transformer-XL: Beyond Fixed-Length Context
+# Transformer-XL
 
-[← Back to Architectures](../README.md) | [← Previous: ViT](../04_vision_transformer/README.md) | [Next: Sparse Transformer →](../06_sparse_transformer/README.md)
+[← Back](../README.md) | [← Prev: ViT](../04_vision_transformer/README.md) | [Next: Sparse Transformer →](../06_sparse_transformer/README.md)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb)
 
@@ -8,108 +8,105 @@
 
 ![Architecture](architecture.png)
 
-## What is it?
+Standard transformers have a hard context limit. Whatever fits in the window is all the model can see - nothing before that exists. Transformer-XL fixes this by caching hidden states between segments, so information can flow across the boundary.
 
-**Transformer-XL** (2019) solves the **fixed context length** problem. Standard transformers process fixed-length segments independently, losing information across segment boundaries. Transformer-XL introduces **segment-level recurrence** to capture longer dependencies.
+---
 
-## The Problem
+## The problem
 
-Standard Transformer:
-```
-Segment 1: [tokens 1-512]  → process → forget
-Segment 2: [tokens 513-1024] → process → no memory of segment 1!
-```
-
-This causes **context fragmentation** - the model can't learn dependencies across segments.
-
-## The Solution: Segment-Level Recurrence
-
-Transformer-XL:
-```
-Segment 1: [tokens 1-512]  → process → cache hidden states
-Segment 2: [tokens 513-1024] → process with access to cached states
-```
-
-Hidden states from the previous segment are **cached** and used as extended context.
-
-## Architecture
+When you process long documents with a standard transformer, you split into chunks:
 
 ```
-Segment t-1                    Segment t (current)
-    ↓                              ↓
-[Hidden states]  ----CACHE--->  [Attention]
-    ↓                              ↓
-  (stop gradient)           Attends to both memory and current
+Segment 1: [tokens 1-512]   → process → forget everything
+Segment 2: [tokens 513-1024] → process → no idea what happened in segment 1
 ```
 
-### Key Components
+This is called **context fragmentation**. The model can't learn dependencies across segment boundaries - it doesn't know they exist.
 
-1. **Memory Cache**: Store hidden states from previous segment
-2. **Extended Context**: Current segment attends to memory + self
-3. **Relative Position Encoding**: Since absolute positions don't work across segments
+---
 
-## The Math
+## The solution: memory
 
-### Attention with Memory
-
-For layer n, segment τ:
+Transformer-XL caches the hidden states from the previous segment:
 
 ```
-h̃_τ^(n-1) = [SG(m_τ^(n-1)) ∘ h_τ^(n-1)]    (concatenate memory + current)
-
-q_τ^n = h_τ^(n-1) × W_q                      (query from current only)
-k_τ^n = h̃_τ^(n-1) × W_k                     (key from memory + current)
-v_τ^n = h̃_τ^(n-1) × W_v                     (value from memory + current)
+Segment 1: [tokens 1-512]   → process → save hidden states
+Segment 2: [tokens 513-1024] → process with access to segment 1's states
 ```
 
-SG = stop gradient (don't backprop through memory)
+When computing attention in segment 2, the keys and values include the cached states from segment 1. So token 513 can attend to token 512, even though they're in different segments.
 
-### Relative Positional Encoding
+---
 
-Absolute positions don't work across segments (position 0 in segment 2 ≠ position 0 in segment 1).
+## How it works
 
-Instead, encode **relative positions** (how far apart are two tokens):
-
-```
-A_ij = q_i^T k_j + q_i^T W_R R_{i-j} + u^T k_j + v^T R_{i-j}
-       ├─────┘   ├───────────────┘   ├─────┘   ├───────────┘
-       content   position-key        global    global position
-```
-
-Where:
-- R_{i-j} = sinusoidal encoding of relative distance
-- u, v = learnable bias vectors
-
-## Complexity
-
-| Aspect | Standard | Transformer-XL |
-|--------|----------|----------------|
-| Memory per segment | O(L²) | O(L²) |
-| Effective context | L | L × N_segments |
-| Evaluation speed | Normal | ~1800x faster (with cache) |
-
-The 1800x speedup comes from not recomputing hidden states for cached tokens.
-
-## Code Highlights
+For each layer:
+1. Cache hidden states from the previous segment (with gradient detached)
+2. Concatenate cached states with current states
+3. Query from current, key/value from concatenated
+4. Save current states for next segment
 
 ```python
-class TransformerXLAttention(nn.Module):
-    def forward(self, h, memory=None):
-        # Concatenate memory with current hidden states
-        if memory is not None:
-            cat = torch.cat([memory, h], dim=1)
-        else:
-            cat = h
-        
-        # Query from current, Key/Value from memory+current
-        Q = self.W_q(h)
-        K = self.W_k(cat)  # Extended context!
-        V = self.W_v(cat)
-        
-        # Compute attention with relative positions
-        attn = self.relative_attention(Q, K, V, self.R)
-        return attn
+def forward(self, x, memory=None):
+    if memory is not None:
+        cat = torch.cat([memory, x], dim=1)  # Extended context
+    else:
+        cat = x
+    
+    Q = self.W_q(x)       # Query from current only
+    K = self.W_k(cat)     # Key from memory + current
+    V = self.W_v(cat)     # Value from memory + current
+    
+    return attention(Q, K, V)
+```
 
+---
+
+## Relative positional encoding
+
+Here's a problem: if we use absolute positions, position 0 in segment 2 is the same as position 0 in segment 1. That's wrong - they're different tokens.
+
+Transformer-XL uses **relative positions** instead. Instead of "this is position 5", it encodes "this token is 3 positions after that token".
+
+```
+A_ij = q_i · k_j + q_i · R_{i-j} + u · k_j + v · R_{i-j}
+       ^^^^^^^   ^^^^^^^^^^^^^   ^^^^^^^   ^^^^^^^^^^^
+       content   relative pos    global    global pos
+```
+
+This is more complex than absolute encoding, but it works across segment boundaries.
+
+---
+
+## Effective context
+
+With memory length M and segment length L:
+
+| Layers | Memory | Effective Context |
+|--------|--------|-------------------|
+| 1 | L | L + L = 2L |
+| 4 | L | L + 4L = 5L |
+| 6 | L | L + 6L = 7L |
+
+The context grows with the number of layers. With 4 layers and 512 segment length, you get ~2500 tokens of effective context.
+
+---
+
+## The speedup at inference
+
+During training, Transformer-XL is similar speed to standard (you still compute everything). But at inference, it's **much faster**.
+
+Standard transformer: Process the entire context from scratch for each new token.
+
+Transformer-XL: Reuse cached states. Only compute for new tokens.
+
+The paper reports ~1800x speedup on evaluation. That's not a typo.
+
+---
+
+## Code
+
+```python
 class TransformerXL(nn.Module):
     def forward(self, x, memories=None):
         if memories is None:
@@ -117,52 +114,34 @@ class TransformerXL(nn.Module):
         
         new_memories = []
         for layer, mem in zip(self.layers, memories):
-            # Cache current hidden state for next segment
-            new_memories.append(h.detach())  # Stop gradient
-            h = layer(h, memory=mem)
+            new_memories.append(x.detach())  # Cache for next segment
+            x = layer(x, memory=mem)
         
-        return self.head(h), new_memories
+        return x, new_memories
 ```
 
-## Key Findings
+---
 
-1. **Context matters**: Longer context = better perplexity on language modeling
-2. **Relative positions work**: Better than absolute for long sequences
-3. **Memory is efficient**: 1800x speedup at evaluation time
-4. **State-of-the-art** (at the time): Best results on WikiText-103, enwik8
+## Why it matters
 
-## Effective Context Length
+Transformer-XL introduced two ideas that are everywhere now:
 
-| Model | Effective Context |
-|-------|-------------------|
-| Standard Transformer | 512 tokens |
-| Transformer-XL | 512 × N segments |
+1. **Recurrence through caching** - GPT and other models use KV cache for fast inference
+2. **Relative positional encoding** - Led to RoPE and ALiBi, used in modern LLMs
 
-With memory length M and segment length L:
-- Effective context = L + (N-1) × M
-- With 4 layers and M=L: context grows ~900 tokens
+Even if you don't use Transformer-XL directly, its ideas are in every production model.
 
-## Transformer-XL vs Standard
+---
 
-| Aspect | Standard | Transformer-XL |
-|--------|----------|----------------|
-| Context | Fixed | Extended via memory |
-| Position encoding | Absolute | Relative |
-| Segment boundary | No information flow | Cached hidden states |
-| Evaluation | Recompute everything | Reuse cached states |
-
-## Key Papers
+## Papers
 
 - [Transformer-XL](https://arxiv.org/abs/1901.02860) (2019) - Original
 - [Compressive Transformer](https://arxiv.org/abs/1911.05507) (2019) - Compressed memory
 
-## Try It
+---
 
-Run the notebook to:
-1. Build Transformer-XL with memory
-2. Compare vs standard transformer
-3. Visualize extended context
-4. See the evaluation speedup
+## Try it
+
+The notebook implements Transformer-XL with memory, compares context length vs standard transformer, and shows the evaluation speedup.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb)
-

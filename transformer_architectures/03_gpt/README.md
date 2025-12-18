@@ -1,6 +1,6 @@
-# GPT: Generative Pre-trained Transformer
+# GPT
 
-[← Back to Architectures](../README.md) | [← Previous: BERT](../02_bert/README.md) | [Next: ViT →](../04_vision_transformer/README.md)
+[← Back](../README.md) | [← Prev: BERT](../02_bert/README.md) | [Next: ViT →](../04_vision_transformer/README.md)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb)
 
@@ -8,117 +8,92 @@
 
 ![Architecture](architecture.png)
 
-## What is it?
+This is it. The architecture behind ChatGPT, Claude, LLaMA, Mistral - pretty much every chatbot and code assistant you've used. The idea is absurdly simple: **predict the next token**. Do that well enough, at scale, and you get intelligence.
 
-**GPT** is a **decoder-only** transformer that generates text autoregressively (one token at a time). It's the architecture behind ChatGPT, Claude, LLaMA, and most modern LLMs.
+---
 
-## The Key Insight
+## The core idea
 
-Train on massive text data with one simple objective: **predict the next token**.
+Train on massive text with one objective:
 
 ```
 Input:  "The cat sat on the"
-Output: "mat" (or whatever comes next)
+Output: "mat" (predict what comes next)
 ```
 
-Scale this up with more data and parameters → emergent abilities.
+That's it. No fancy objectives, no task-specific heads. Just next token prediction, scaled up with more data and parameters.
+
+Turns out this simple objective, applied to enough text, learns grammar, facts, reasoning, and code. Nobody fully understands why it works this well.
+
+---
 
 ## Architecture
 
-```
-Token1 Token2 Token3 ... TokenN
-              ↓
-    Token Embedding + Position Embedding
-              ↓
-    Decoder Block × N (with causal mask)
-              ↓
-    Linear → Softmax
-              ↓
-    Next Token Probabilities
-```
-
-### Decoder Block
-1. **Masked Self-Attention** - Can only see past tokens
-2. **Layer Norm** (Pre-LN in GPT-2+)
-3. **Feed Forward Network**
-4. **Layer Norm**
-5. **Residual connections**
-
-## The Causal Mask
-
-The key difference from BERT: **causal masking**.
+GPT is the decoder half of the original transformer:
 
 ```
-Query\Key  T1  T2  T3  T4
-   T1      ✓   ✗   ✗   ✗
-   T2      ✓   ✓   ✗   ✗
-   T3      ✓   ✓   ✓   ✗
-   T4      ✓   ✓   ✓   ✓
+Tokens
+   ↓
+Token Embedding + Position Embedding
+   ↓
+Decoder Block × N (with causal mask)
+   ↓
+Linear → Softmax
+   ↓
+Next Token Probabilities
 ```
 
-Each token can only attend to itself and previous tokens.
+No encoder. Just stack decoder layers and let it learn.
 
-## The Math
+---
 
-### Autoregressive Language Modeling
+## The causal mask
 
-```
-P(x) = P(x₁) × P(x₂|x₁) × P(x₃|x₁,x₂) × ... × P(xₙ|x₁,...,xₙ₋₁)
-     = ∏ P(xᵢ | x₁, ..., xᵢ₋₁)
-```
-
-### Loss Function
+This is the key difference from BERT. Each token can only see itself and past tokens:
 
 ```
-L = -∑ log P(xₜ | x₁, ..., xₜ₋₁)
+Position:    1  2  3  4
+Token 1:     ✓  ✗  ✗  ✗
+Token 2:     ✓  ✓  ✗  ✗
+Token 3:     ✓  ✓  ✓  ✗
+Token 4:     ✓  ✓  ✓  ✓
 ```
 
-Just cross-entropy on next token prediction.
+When predicting token 4, the model only sees tokens 1-3. This lets it generate text autoregressively without cheating.
 
-### Causal Attention
+---
 
-```
-Attention(Q, K, V) = softmax(QK^T / √d_k + M) × V
+## Why decoder-only won
 
-where M[i,j] = 0 if j ≤ i, else -∞
-```
+The original transformer had encoder + decoder. BERT used encoder-only. But for generation, decoder-only (GPT-style) won because:
 
-## GPT Evolution
+1. **Simpler**: One stack, not two
+2. **Unified**: Same architecture for training and generation
+3. **Scalable**: No cross-attention overhead
+4. **Emergent abilities**: Scale seems to unlock new capabilities
 
-| Model | Year | Parameters | Context | Training Data |
-|-------|------|------------|---------|---------------|
-| GPT-1 | 2018 | 117M | 512 | BookCorpus |
-| GPT-2 | 2019 | 1.5B | 1024 | WebText (40GB) |
-| GPT-3 | 2020 | 175B | 2048 | 300B tokens |
-| GPT-4 | 2023 | ~1.8T (MoE) | 8K-128K | Unknown |
+Every major LLM today is decoder-only.
 
-## Code Highlights
+---
+
+## The evolution
+
+| Model | Year | Params | What changed |
+|-------|------|--------|--------------|
+| GPT-1 | 2018 | 117M | Proved the concept |
+| GPT-2 | 2019 | 1.5B | Zero-shot capabilities |
+| GPT-3 | 2020 | 175B | In-context learning, few-shot |
+| GPT-4 | 2023 | ~1.8T? | MoE, multimodal, RLHF |
+
+The progression: same architecture, more scale, better data, alignment tuning.
+
+---
+
+## Generation
+
+Once trained, you generate by sampling:
 
 ```python
-class CausalSelfAttention(nn.Module):
-    def __init__(self, d_model, n_heads, max_len):
-        super().__init__()
-        # ... projections ...
-        
-        # Causal mask: lower triangular
-        mask = torch.tril(torch.ones(max_len, max_len))
-        self.register_buffer('mask', mask)
-    
-    def forward(self, x):
-        B, T, C = x.shape
-        
-        # Compute Q, K, V
-        Q, K, V = self.qkv(x).chunk(3, dim=-1)
-        
-        # Attention with causal mask
-        attn = (Q @ K.transpose(-2, -1)) / math.sqrt(self.d_k)
-        attn = attn.masked_fill(self.mask[:T, :T] == 0, float('-inf'))
-        attn = F.softmax(attn, dim=-1)
-        
-        return attn @ V
-
-# Generation
-@torch.no_grad()
 def generate(model, prompt, max_tokens, temperature=1.0):
     for _ in range(max_tokens):
         logits = model(prompt)[:, -1, :] / temperature
@@ -128,60 +103,62 @@ def generate(model, prompt, max_tokens, temperature=1.0):
     return prompt
 ```
 
-## Key Innovations Over Versions
+Temperature controls randomness:
+- Low (0.1): Predictable, repetitive
+- High (1.5): Creative, sometimes nonsense
+- Medium (0.7): Usually what you want
 
-### GPT-1 (2018)
-- Showed pre-training + fine-tuning works
-
-### GPT-2 (2019)
-- Pre-LN (LayerNorm before attention)
-- Larger scale, zero-shot capabilities
-
-### GPT-3 (2020)
-- In-context learning
-- Few-shot prompting
-- Emergent abilities at scale
-
-### GPT-4 (2023)
-- Likely MoE architecture
-- Multimodal (vision)
-- RLHF alignment
-
-## What GPT is Good For
-
-✅ **Generation tasks**:
-- Text completion
-- Chatbots
-- Code generation
-- Creative writing
-- Summarization (with prompting)
-
-❌ **Less ideal for**:
-- Pure classification (use BERT)
-- When you need bidirectional context
+---
 
 ## GPT vs BERT
 
-| Aspect | GPT | BERT |
-|--------|-----|------|
+| | GPT | BERT |
+|---|-----|------|
 | Architecture | Decoder-only | Encoder-only |
-| Attention | Causal (unidirectional) | Bidirectional |
-| Pre-training | Next token prediction | MLM + NSP |
-| Best for | Generation | Understanding |
+| Attention | Causal (left only) | Bidirectional |
+| Training | Next token prediction | Masked language model |
+| Good at | Generation | Understanding |
 
-## Key Papers
+Use BERT for classification. Use GPT for generation. Or just use GPT for everything (modern LLMs are surprisingly good at classification too).
+
+---
+
+## Code
+
+The causal attention is simple - just mask future positions:
+
+```python
+class CausalAttention(nn.Module):
+    def __init__(self, d_model, n_heads, max_len):
+        super().__init__()
+        # Lower triangular = can only see past
+        mask = torch.tril(torch.ones(max_len, max_len))
+        self.register_buffer('mask', mask)
+    
+    def forward(self, x):
+        B, T, C = x.shape
+        Q, K, V = self.qkv(x).chunk(3, dim=-1)
+        
+        attn = (Q @ K.transpose(-2, -1)) / math.sqrt(self.d_k)
+        attn = attn.masked_fill(self.mask[:T, :T] == 0, float('-inf'))
+        attn = F.softmax(attn, dim=-1)
+        
+        return attn @ V
+```
+
+---
+
+## Papers
 
 - [GPT-1](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) (2018)
 - [GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) (2019)
 - [GPT-3](https://arxiv.org/abs/2005.14165) (2020)
-- [InstructGPT](https://arxiv.org/abs/2203.02155) (2022) - RLHF
+- [InstructGPT](https://arxiv.org/abs/2203.02155) (2022) - The RLHF paper
 
-## Try It
+---
 
-Run the notebook to:
-1. Build GPT from scratch
-2. Train a character-level language model
-3. Generate text with different temperatures
+## Try it
+
+The notebook builds GPT from scratch, trains a character-level language model, and lets you generate text with different temperatures.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb)
-
