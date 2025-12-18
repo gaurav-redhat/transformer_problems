@@ -2,7 +2,7 @@
 
 A comprehensive collection documenting **18 key limitations** of the Transformer architecture and their solutions.
 
-Each problem includes a visual infographic (`problem.png`) and detailed documentation (`README.md`) with references to relevant research papers.
+Each problem includes a visual infographic and detailed documentation with references to relevant research papers.
 
 ---
 
@@ -34,164 +34,146 @@ Each problem includes a visual infographic (`problem.png`) and detailed document
 ## 🔍 Problems Overview
 
 ### 01. Quadratic Complexity O(N²)
-**Problem:** Self-attention computes N×N matrix, causing memory and compute explosion for long sequences.
 
-**Solutions:** Sparse Attention, Longformer, Linformer, Performer, FlashAttention, Transformer-XL
+![Problem 01](./01_quadratic_complexity/problem.png)
 
-📁 [Details](./01_quadratic_complexity/)
+📁 [View Details](./01_quadratic_complexity/)
 
 ---
 
 ### 02. No Positional Awareness
-**Problem:** Transformer has no inherent notion of token order. 'Dog bites man' = 'Man bites dog'.
 
-**Solutions:** Sinusoidal PE, Learnable PE, Relative PE, RoPE, ALiBi
+![Problem 02](./02_positional_awareness/problem.png)
 
-📁 [Details](./02_positional_awareness/)
+📁 [View Details](./02_positional_awareness/)
 
 ---
 
 ### 03. Fixed Context Window
-**Problem:** Cannot remember information beyond maximum sequence length. Past is forgotten.
 
-**Solutions:** Transformer-XL, RAG, External Memory, Mamba
+![Problem 03](./03_fixed_context/problem.png)
 
-📁 [Details](./03_fixed_context/)
+📁 [View Details](./03_fixed_context/)
 
 ---
 
 ### 04. Slow Autoregressive Decoding
-**Problem:** Decoder generates one token at a time causing high latency. Sequential bottleneck.
 
-**Solutions:** KV Cache, Speculative Decoding, Non-Autoregressive Models, Distillation
+![Problem 04](./04_slow_decoding/problem.png)
 
-📁 [Details](./04_slow_decoding/)
+📁 [View Details](./04_slow_decoding/)
 
 ---
 
 ### 05. No Local Inductive Bias
-**Problem:** No bias toward local patterns. Hurts vision and audio tasks where locality matters.
 
-**Solutions:** CNN + Transformer, Swin Transformer, Conformer, Hierarchical ViT
+![Problem 05](./05_local_bias/problem.png)
 
-📁 [Details](./05_local_bias/)
+📁 [View Details](./05_local_bias/)
 
 ---
 
 ### 06. Data-Hungry Architecture
-**Problem:** Requires massive datasets to generalize well. Small data = poor performance.
 
-**Solutions:** Self-Supervised Pretraining, Transfer Learning, Fine-Tuning, Knowledge Distillation
+![Problem 06](./06_data_hungry/problem.png)
 
-📁 [Details](./06_data_hungry/)
+📁 [View Details](./06_data_hungry/)
 
 ---
 
 ### 07. High Memory Footprint
-**Problem:** Q, K, V tensors and KV cache consume large memory. GPU OOM errors common.
 
-**Solutions:** FlashAttention, KV Cache Optimization, Gradient Checkpointing, Memory-Efficient Attention
+![Problem 07](./07_memory_footprint/problem.png)
 
-📁 [Details](./07_memory_footprint/)
+📁 [View Details](./07_memory_footprint/)
 
 ---
 
 ### 08. High Compute & Power Cost
-**Problem:** Expensive FLOPs. Not edge-friendly. High electricity bills for training.
 
-**Solutions:** Quantization (INT8/INT4), Lightweight Transformers, Operator Fusion, Pruning
+![Problem 08](./08_compute_cost/problem.png)
 
-📁 [Details](./08_compute_cost/)
+📁 [View Details](./08_compute_cost/)
 
 ---
 
 ### 09. Poor Length Generalization
-**Problem:** Fails when sequence length exceeds training length. Positional encodings break.
 
-**Solutions:** Relative Position Encoding, RoPE Scaling, ALiBi, Length Extrapolation
+![Problem 09](./09_length_generalization/problem.png)
 
-📁 [Details](./09_length_generalization/)
+📁 [View Details](./09_length_generalization/)
 
 ---
 
 ### 10. Training Instability
-**Problem:** Gradient explosion/vanishing in deep Transformers. Training diverges or stalls.
 
-**Solutions:** Pre-LayerNorm, Learning Rate Warmup, AdamW Optimizer, Gradient Clipping
+![Problem 10](./10_training_instability/problem.png)
 
-📁 [Details](./10_training_instability/)
+📁 [View Details](./10_training_instability/)
 
 ---
 
 ### 11. Attention Over-Smoothing
-**Problem:** Token representations become too similar in deep layers. Loss of information.
 
-**Solutions:** Residual Scaling, DropHead, Attention Temperature Control, Skip Connections
+![Problem 11](./11_attention_smoothing/problem.png)
 
-📁 [Details](./11_attention_smoothing/)
+📁 [View Details](./11_attention_smoothing/)
 
 ---
 
 ### 12. No Recurrence / Streaming
-**Problem:** Hard to use for streaming or online inference. Must process full sequence.
 
-**Solutions:** Transformer-XL, Chunk-based Attention, Streaming Transformers, Delta Attention
+![Problem 12](./12_no_recurrence/problem.png)
 
-📁 [Details](./12_no_recurrence/)
+📁 [View Details](./12_no_recurrence/)
 
 ---
 
 ### 13. Large Model Size
-**Problem:** Too many parameters. Deployment difficulty on edge devices.
 
-**Solutions:** LoRA, QLoRA, Parameter Sharing (ALBERT), Pruning, Distillation
+![Problem 13](./13_model_size/problem.png)
 
-📁 [Details](./13_model_size/)
+📁 [View Details](./13_model_size/)
 
 ---
 
 ### 14. Sensitivity to Noise Tokens
-**Problem:** Global attention attends to irrelevant tokens. Wastes capacity on noise.
 
-**Solutions:** Sparse Attention, Token Pruning, Attention Masking, Gating Mechanisms
+![Problem 14](./14_noise_sensitivity/problem.png)
 
-📁 [Details](./14_noise_sensitivity/)
+📁 [View Details](./14_noise_sensitivity/)
 
 ---
 
 ### 15. Poor Interpretability
-**Problem:** Attention weights are not true explanations. Hard to debug and understand.
 
-**Solutions:** Attention Rollout, Probing Models, Saliency Methods, Mechanistic Interpretability
+![Problem 15](./15_interpretability/problem.png)
 
-📁 [Details](./15_interpretability/)
+📁 [View Details](./15_interpretability/)
 
 ---
 
 ### 16. Inefficient for Dense Inputs
-**Problem:** Flattening images/videos creates huge token counts. Vision = many patches.
 
-**Solutions:** Patch Embedding, Hierarchical Vision Transformers, Tubelet Embedding, Swin
+![Problem 16](./16_dense_inputs/problem.png)
 
-📁 [Details](./16_dense_inputs/)
+📁 [View Details](./16_dense_inputs/)
 
 ---
 
 ### 17. Hardware Inefficiency
-**Problem:** Naive attention is memory-bandwidth bound. Poor GPU utilization.
 
-**Solutions:** FlashAttention, Fused MHA Kernels, xFormers, Custom CUDA Kernels
+![Problem 17](./17_hardware_inefficiency/problem.png)
 
-📁 [Details](./17_hardware_inefficiency/)
+📁 [View Details](./17_hardware_inefficiency/)
 
 ---
 
 ### 18. Real-Time Deployment
-**Problem:** Latency and memory constraints in production. Too slow for real-time apps.
 
-**Solutions:** Quantization, Pruning, Distillation, Edge-Optimized Transformers, ONNX
+![Problem 18](./18_realtime_deployment/problem.png)
 
-📁 [Details](./18_realtime_deployment/)
+📁 [View Details](./18_realtime_deployment/)
 
 ---
 
@@ -239,4 +221,3 @@ Contributions are welcome! Feel free to:
 <p align="center">
   <b>⭐ Star this repo if you find it useful!</b>
 </p>
-
