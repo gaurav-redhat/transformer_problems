@@ -1,98 +1,109 @@
-# Switch Transformer
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Switch_Transformer-E91E63?style=for-the-badge" alt="Switch"/>
+  <img src="https://img.shields.io/badge/Method-Mixture_of_Experts-purple?style=for-the-badge" alt="MoE"/>
+  <img src="https://img.shields.io/badge/Scale-1.6_Trillion-gold?style=for-the-badge" alt="Scale"/>
+</p>
 
-[← Back](../README.md) | [← Prev: Longformer](../09_longformer/README.md)
+<h1 align="center">10. Switch Transformer</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../09_longformer/README.md">← Prev</a>
+</p>
 
----
-
-![Architecture](architecture.png)
-
-Here's a wild idea: what if you could have a trillion parameters but only use a fraction of them for each input? Switch Transformer does exactly this using **Mixture of Experts** (MoE). Each token gets routed to one of many "expert" networks. More capacity, same compute.
-
----
-
-## The problem with scaling
-
-Traditional scaling: more parameters = more FLOPs = more time/money.
-
-GPT-3 (175B params) took ~300K GPU hours. Want 10× more parameters? Pay 10× more compute.
-
-Switch Transformer breaks this relationship.
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-## The key idea
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
-Instead of one big feed-forward network, use N smaller "experts":
+---
+
+## 💡 The Idea
+
+> *What if you could have a trillion parameters but only use a fraction for each input?*
+
+**Mixture of Experts (MoE):** Each token gets routed to one of many "expert" networks.
 
 ```
-Standard:  Token → [Single Large FFN] → Output
+Standard:  Token → [Large FFN] → Output
 
 Switch:    Token → [Router] → Expert 3 → Output
-                            ↗
            Token → [Router] → Expert 7 → Output
 ```
 
-Each token goes to exactly **one** expert (top-1 routing). You have N× more parameters, but each token only activates 1/N of them. Same FLOPs per token.
+**More capacity, same compute.**
 
 ---
 
-## How routing works
+## 📊 The Scale
 
-A learned linear layer decides which expert each token goes to:
+| Model | Total Params | Active Params | Experts |
+|-------|:------------:|:-------------:|:-------:|
+| Switch-Base | 7B | 335M | 128 |
+| Switch-Large | 26B | 783M | 128 |
+| **Switch-C** | **1.6T** | **12.8B** | 2048 |
+
+> 🤯 **1.6 trillion parameters** — but each token only uses 12.8B!
+
+---
+
+## 🔀 How Routing Works
 
 ```python
-router_logits = W_router @ token    # (d,) → (n_experts,)
+router_logits = W_router @ token    # → (n_experts,)
 expert_weights = softmax(router_logits)
-chosen_expert = argmax(expert_weights)
+chosen_expert = argmax(expert_weights)  # Top-1 routing
 ```
 
 Simple. Token goes in, expert index comes out.
 
 ---
 
-## The scale
+## ⚖️ Load Balancing
 
-| Model | Total Params | Active Params | Experts |
-|-------|--------------|---------------|---------|
-| Switch-Base | 7B | 335M | 128 |
-| Switch-Large | 26B | 783M | 128 |
-| Switch-C | 1.6T | 12.8B | 2048 |
+**Problem:** All tokens might go to one expert ("expert collapse")
 
-**1.6 trillion parameters**. But each token only uses 12.8B. Same cost as a 12.8B dense model, with the capacity of a 1.6T model.
-
----
-
-## The catch: load balancing
-
-If every token goes to the same expert, you've wasted N-1 experts and created a bottleneck. The model wants to collapse to using one expert.
-
-Fix: auxiliary loss that encourages balanced routing:
+**Solution:** Auxiliary loss for balanced routing
 
 ```
-L_aux = α × N × Σᵢ (fraction_routed_to_i × avg_prob_for_i)
+L_aux = α × N × Σᵢ (fraction_i × avg_prob_i)
 ```
 
 This pushes toward uniform distribution across experts.
 
 ---
 
-## Capacity
-
-Experts have limited capacity per batch. If too many tokens route to one expert, some get dropped:
+## 🏗️ Architecture
 
 ```
-capacity = (batch_size × seq_len / n_experts) × capacity_factor
+Token Embeddings
+       ↓
+    Attention (standard)
+       ↓
+    ┌────────────────────┐
+    │      ROUTER        │
+    │  softmax → argmax  │
+    └────────────────────┘
+         /  |  |  \
+        ↓   ↓  ↓   ↓
+     E1  E2  E3  E4  ...
+        \   |  |  /
+         ↓  ↓  ↓ ↓
+    Combined Output
+       ↓
+    Next Layer
 ```
-
-With capacity_factor=1.25, you have 25% buffer. Overflow tokens skip the expert (use identity shortcut).
 
 ---
 
-## Code
-
-The router:
+## 💻 Code
 
 ```python
 class SwitchRouter(nn.Module):
@@ -102,14 +113,10 @@ class SwitchRouter(nn.Module):
     def forward(self, x):
         logits = self.router(x)
         probs = F.softmax(logits, dim=-1)
-        expert_idx = probs.argmax(dim=-1)
+        expert_idx = probs.argmax(dim=-1)      # Top-1
         expert_weight = probs.max(dim=-1).values
         return expert_idx, expert_weight
-```
 
-The switch layer:
-
-```python
 class SwitchFFN(nn.Module):
     def __init__(self, d_model, d_ff, n_experts):
         self.router = SwitchRouter(d_model, n_experts)
@@ -131,59 +138,57 @@ class SwitchFFN(nn.Module):
 
 ---
 
-## Top-1 vs Top-K
+## 🆚 Top-1 vs Top-K
 
-| Method | Experts/token | Compute | Capacity |
-|--------|---------------|---------|----------|
-| Top-1 (Switch) | 1 | Lowest | Lower |
-| Top-2 | 2 | 2× | Higher |
-| Soft MoE | All | N× | Highest |
-
-Switch chose top-1 for maximum efficiency. Later models like Mixtral use top-2 for better quality.
+| Method | Experts/Token | Compute |
+|--------|:-------------:|:-------:|
+| Top-1 (Switch) | 1 | Lowest |
+| Top-2 (Mixtral) | 2 | 2× |
+| Soft MoE | All | N× |
 
 ---
 
-## The MoE family
+## 👨‍👩‍👧‍👦 The MoE Family
 
 | Model | Year | Routing | Scale |
-|-------|------|---------|-------|
+|-------|:----:|:-------:|:-----:|
 | Switch | 2021 | Top-1 | 1.6T |
 | GLaM | 2021 | Top-2 | 1.2T |
-| Mixtral | 2023 | Top-2 | 46B (12B active) |
-| DeepSeek-V3 | 2024 | Fine-grained | 671B (37B active) |
+| **Mixtral** | 2023 | Top-2 | 46B (12B active) |
+| **DeepSeek-V3** | 2024 | Fine-grained | 671B (37B active) |
 
-MoE is now standard for frontier models. It's how you get to massive scale affordably.
-
----
-
-## Training tips
-
-1. **Use bfloat16** - MoE is numerically sensitive
-2. **Keep router in float32** - Precision matters for routing decisions
-3. **Start with fewer experts** - 8 or 16 before scaling to hundreds
-4. **Monitor expert utilization** - Watch for collapse
+> 💡 *MoE is now standard for frontier models — it's how you scale affordably.*
 
 ---
 
-## Why it matters
+## 🔧 Training Tips
 
-MoE changes the game. You can have models with enormous capacity (memory of facts, knowledge) without proportional inference cost. This is likely how GPT-4 works (rumored to be MoE).
-
-The tradeoff: communication overhead between experts, more complex training, memory for all expert weights.
-
----
-
-## Papers
-
-- [Switch Transformer](https://arxiv.org/abs/2101.03961) (2021) - Original
-- [GLaM](https://arxiv.org/abs/2112.06905) (2021) - Google's MoE
-- [Mixtral](https://arxiv.org/abs/2401.04088) (2024) - Open MoE that works
-- [DeepSeek-MoE](https://arxiv.org/abs/2401.06066) (2024) - Fine-grained experts
+| Tip | Why |
+|-----|-----|
+| Use bfloat16 | MoE is numerically sensitive |
+| Keep router in float32 | Precision matters for routing |
+| Start with fewer experts | 8-16 before scaling to hundreds |
+| Monitor utilization | Watch for collapse |
 
 ---
 
-## Try it
+## 📚 Papers
 
-The notebook builds a Switch layer with routing, visualizes expert assignment, implements load balancing, and compares to dense FFN.
+| Paper | Year |
+|-------|:----:|
+| [Switch Transformer](https://arxiv.org/abs/2101.03961) | 2021 |
+| [GLaM](https://arxiv.org/abs/2112.06905) | 2021 |
+| [Mixtral](https://arxiv.org/abs/2401.04088) | 2024 |
+| [DeepSeek-MoE](https://arxiv.org/abs/2401.06066) | 2024 |
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb)
+---
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
+
+<p align="center">
+  <sub>Build Switch layer • Visualize expert assignment • Implement load balancing</sub>
+</p>

@@ -1,104 +1,119 @@
-# Reformer
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Reformer-795548?style=for-the-badge" alt="Reformer"/>
+  <img src="https://img.shields.io/badge/Complexity-O(N_log_N)-green?style=for-the-badge" alt="Complexity"/>
+  <img src="https://img.shields.io/badge/Method-LSH_+_Reversible-orange?style=for-the-badge" alt="Method"/>
+</p>
 
-[← Back](../README.md) | [← Prev: Performer](../07_performer/README.md) | [Next: Longformer →](../09_longformer/README.md)
+<h1 align="center">08. Reformer</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../07_performer/README.md">← Prev</a> •
+  <a href="../09_longformer/README.md">Next: Longformer →</a>
+</p>
 
----
-
-![Architecture](architecture.png)
-
-Reformer tackles two problems at once: the O(N²) attention **and** the memory explosion from storing activations. It uses LSH (locality-sensitive hashing) for fast attention and reversible layers to avoid storing activations.
-
-Together, they let you process 64K tokens on a single GPU.
-
----
-
-## Problem 1: O(N²) attention
-
-Standard attention: every query compares to every key. Most of those comparisons are pointless - the softmax makes most weights near zero.
-
-Reformer's insight: **similar queries probably have similar keys**. So hash them into buckets and only compute attention within buckets.
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-## LSH Attention
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
-LSH (locality-sensitive hashing) is a hash function where similar items collide:
+---
+
+## 💡 The Idea
+
+Reformer tackles **two problems at once**:
+
+| Problem | Solution |
+|---------|----------|
+| O(N²) attention | **LSH Attention** — hash similar tokens together |
+| Memory for backprop | **Reversible Layers** — don't store activations |
+
+> *Together, they let you process **64K tokens** on a single GPU.*
+
+---
+
+## 🔍 LSH Attention
+
+### The Insight
+> *Similar queries probably have similar keys. Hash them into buckets, attend within buckets.*
+
+### LSH (Locality-Sensitive Hashing)
 ```
 P(hash(x) = hash(y)) ∝ similarity(x, y)
 ```
 
-For attention, we use angular LSH:
+### The Algorithm
 ```
-hash(x) = sign(x · r)  (r is a random vector)
-```
-
-The algorithm:
 1. Hash all queries and keys
-2. Sort by hash bucket
-3. Only compute attention within buckets
+2. Sort by bucket
+3. Attend ONLY within buckets
+4. Multiple rounds for coverage
+```
 
-If buckets are size √N on average, you get O(N × √N) = O(N^1.5) instead of O(N²).
+### Complexity
+```
+O(N × bucket_size) ≈ O(N log N)
+```
 
 ---
 
-## Problem 2: Activation memory
+## 🔄 Reversible Layers
 
-During training, you need to store activations at every layer for backprop:
+### The Problem
 ```
-Memory = O(N × L × d)   where L = number of layers
+Standard: Store activations at EVERY layer
+Memory = O(N × L × d)  where L = layers
 ```
 
-For 64K tokens and 12 layers, that's gigabytes of activation memory. Gradient checkpointing helps, but you're still bounded.
+### The Solution
+Split into two streams (x₁, x₂):
 
----
-
-## Reversible layers
-
-Reformer uses **reversible residual networks**. The idea: if you can compute outputs from inputs, can you compute inputs from outputs?
-
-Split the hidden state into two parts (x₁, x₂):
 ```
 Forward:
 y₁ = x₁ + Attention(x₂)
 y₂ = x₂ + FFN(y₁)
 
-Backward (reconstruct inputs):
+Backward (reconstruct!):
 x₂ = y₂ - FFN(y₁)
 x₁ = y₁ - Attention(x₂)
 ```
 
-You only store the **final layer's activations**. During backprop, you reconstruct earlier layers on the fly.
+### Memory Savings
 
-Memory drops from O(N × L × d) to O(N × d). A factor of L savings.
+| Method | Activation Memory |
+|--------|:-----------------:|
+| Standard | O(N × L × d) |
+| Reversible | O(N × d) |
+
+> *Save a factor of L (number of layers)!*
 
 ---
 
-## Code
+## 💻 Code
 
-LSH hashing:
-
+### LSH Hashing
 ```python
 def lsh_hash(x, n_hashes, n_buckets):
     d = x.shape[-1]
     projections = torch.randn(n_hashes, d, n_buckets // 2)
-    
     dots = torch.einsum('...d,hdb->...hb', x, projections)
     buckets = (dots > 0).int()
-    
-    # Combine hash values
     powers = 2 ** torch.arange(n_buckets // 2)
     return (buckets * powers).sum(dim=-1)
 ```
 
-Reversible layer:
-
+### Reversible Block
 ```python
 class ReversibleBlock(nn.Module):
     def __init__(self, attn, ffn):
-        self.attn = attn
-        self.ffn = ffn
+        self.attn, self.ffn = attn, ffn
     
     def forward(self, x1, x2):
         y1 = x1 + self.attn(x2)
@@ -113,48 +128,55 @@ class ReversibleBlock(nn.Module):
 
 ---
 
-## The tradeoffs
+## 📊 What Reformer Saves
 
-**LSH attention:**
-- Pro: O(N log N) instead of O(N²)
-- Con: May miss important key-value pairs (hash collision isn't perfect)
-- Con: Multiple hash rounds needed for reliability
-
-**Reversible layers:**
-- Pro: Huge memory savings
-- Con: Extra compute during backprop (recomputation)
-- Con: More complex implementation
+| Technique | What It Saves | How |
+|-----------|:-------------:|-----|
+| LSH Attention | Compute | Only attend within buckets |
+| Reversible | Memory | Recompute on backward |
+| Chunked FFN | Memory | Process in chunks |
+| Shared Q/K | Parameters | Q = K for LSH |
 
 ---
 
-## Shared Q/K
+## ⚠️ The Tradeoffs
 
-One more trick: Reformer shares queries and keys (Q = K). This makes LSH bucketing more meaningful - you're hashing queries and keys with the same function, so they naturally end up in the same buckets.
-
-This loses some expressivity but makes the whole thing work better.
+| Pro | Con |
+|-----|-----|
+| O(N log N) attention | May miss important keys |
+| Huge memory savings | Extra compute on backward |
+| 64K tokens on 1 GPU | Complex implementation |
 
 ---
 
-## In practice
+## 🤔 In Practice
 
-Reformer was important research, but it's complex to implement correctly. In practice:
+Reformer was important research, but it's complex. Today:
 
-- **For long sequences**: People now use FlashAttention or Longformer
-- **For memory**: Gradient checkpointing is simpler and works well
+| For Long Sequences | Use |
+|-------------------|-----|
+| Documents | FlashAttention or Longformer |
+| Memory | Gradient checkpointing |
 
 Still, understanding Reformer teaches you about efficient attention design.
 
 ---
 
-## Papers
+## 📚 Papers
 
-- [Reformer](https://arxiv.org/abs/2001.04451) (2020) - Original
-- [RevNets](https://arxiv.org/abs/1707.04585) (2017) - Reversible networks
+| Paper | Year |
+|-------|:----:|
+| [Reformer](https://arxiv.org/abs/2001.04451) | 2020 |
+| [RevNets](https://arxiv.org/abs/1707.04585) | 2017 |
 
 ---
 
-## Try it
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
-The notebook implements LSH attention, builds reversible layers, compares memory usage, and visualizes bucket assignments.
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb)
+<p align="center">
+  <sub>Implement LSH attention • Build reversible layers • Compare memory usage</sub>
+</p>

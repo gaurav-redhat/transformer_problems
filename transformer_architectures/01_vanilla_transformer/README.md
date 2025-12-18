@@ -1,99 +1,121 @@
-# Vanilla Transformer
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Vanilla_Transformer-4285F4?style=for-the-badge" alt="Vanilla"/>
+  <img src="https://img.shields.io/badge/Type-Encoder--Decoder-lightgrey?style=for-the-badge" alt="Type"/>
+  <img src="https://img.shields.io/badge/Complexity-O(N²)-red?style=for-the-badge" alt="Complexity"/>
+</p>
 
-[← Back](../README.md) | [Next: BERT →](../02_bert/README.md)
+<h1 align="center">01. Vanilla Transformer</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../02_bert/README.md">Next: BERT →</a>
+</p>
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-![Architecture](architecture.png)
-
-This is where it all started. The 2017 "Attention Is All You Need" paper that replaced RNNs and LSTMs with pure attention. Every modern language model - BERT, GPT, LLaMA, Claude - is built on this foundation.
-
-If you only understand one architecture, make it this one.
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
 ---
 
-## How it works
+## 💡 The Idea
 
-The transformer has two parts: an **encoder** (reads the input) and a **decoder** (generates the output). The original was built for translation - encoder reads "Hello", decoder outputs "Bonjour".
+This is where it all started. The 2017 "Attention Is All You Need" paper that replaced RNNs and LSTMs with pure attention. Every modern language model — BERT, GPT, LLaMA, Claude — builds on this foundation.
+
+> *If you only understand one architecture, make it this one.*
+
+---
+
+## 🏗️ Architecture
 
 ```
 Input → Embedding → [Encoder × 6] → [Decoder × 6] → Output
 ```
 
-Each encoder layer does:
-1. Self-attention (every token looks at every other token)
-2. Feed-forward network (process each position)
-3. Residual connections + layer norm (keep gradients flowing)
+<table>
+<tr>
+<td width="50%" valign="top">
 
-The decoder is similar, but with two key differences:
-- **Masked self-attention**: Can only see past tokens (no peeking at the future)
-- **Cross-attention**: Looks at the encoder output
+### Encoder
+1. **Self-Attention** — every token sees every token
+2. **Add & Norm** — residual + layer norm
+3. **Feed-Forward** — two linear layers
+4. **Add & Norm**
+
+</td>
+<td width="50%" valign="top">
+
+### Decoder
+1. **Masked Self-Attention** — only see past
+2. **Add & Norm**
+3. **Cross-Attention** — look at encoder
+4. **Add & Norm**
+5. **Feed-Forward**
+6. **Add & Norm**
+
+</td>
+</tr>
+</table>
 
 ---
 
-## The attention mechanism
+## ➗ The Math
 
-This is the heart of the transformer. The idea: let each token decide what to pay attention to.
+### Scaled Dot-Product Attention
 
 ```
 Attention(Q, K, V) = softmax(QK^T / √d_k) × V
 ```
 
-In plain English:
-- **Query (Q)**: "What am I looking for?"
-- **Key (K)**: "What do I contain?"
-- **Value (V)**: "What should I return?"
+| Symbol | Meaning |
+|:------:|---------|
+| **Q** | Query — "What am I looking for?" |
+| **K** | Key — "What do I contain?" |
+| **V** | Value — "What should I return?" |
+| **√d_k** | Scaling — prevents softmax saturation |
 
-The √d_k is just to keep the softmax from saturating. Without it, large dot products make everything either 0 or 1.
+### Multi-Head Attention
 
-**Multi-head attention** runs several attention operations in parallel - different heads learn different things (one might track syntax, another semantics, another coreference).
+```
+MultiHead = Concat(head₁, ..., head_h) × W_O
+```
+
+Different heads learn different relationships (syntax, semantics, coreference).
 
 ---
 
-## Positional encoding
+## 📊 Numbers
 
-Attention has no sense of order. "Dog bites man" and "Man bites dog" look identical to it. We fix this by adding position information:
-
-```
-PE(pos, 2i)   = sin(pos / 10000^(2i/d))
-PE(pos, 2i+1) = cos(pos / 10000^(2i/d))
-```
-
-The sin/cos pattern lets the model learn relative positions - position 5 relative to position 3 always has the same pattern.
-
----
-
-## The numbers
-
-Original paper configuration:
-
-| What | Value |
-|------|-------|
+| Parameter | Value |
+|-----------|:-----:|
 | Model dimension | 512 |
-| Feed-forward dimension | 2048 |
+| FFN dimension | 2048 |
 | Attention heads | 8 |
 | Layers | 6 |
-| Total parameters | ~65M |
+| **Total params** | **~65M** |
 
 ---
 
-## Why O(N²) matters
+## ⚠️ The O(N²) Problem
 
-The QK^T multiplication creates an N×N attention matrix. Double your sequence length, quadruple your compute. This is why we have Longformer, Performer, and all the efficient variants - they're trying to fix this.
+| Sequence | Attention Ops |
+|:--------:|:-------------:|
+| 1K | 1M |
+| 4K | 16M |
+| 16K | 256M |
 
-| Sequence | Attention ops |
-|----------|---------------|
-| 1K tokens | 1M |
-| 4K tokens | 16M |
-| 16K tokens | 256M |
+This is why we have Longformer, Performer, etc. — they fix this quadratic scaling.
 
 ---
 
-## Code
-
-The core attention is surprisingly simple:
+## 💻 Code
 
 ```python
 def attention(Q, K, V, mask=None):
@@ -106,15 +128,21 @@ def attention(Q, K, V, mask=None):
 
 ---
 
-## Papers
+## 📚 Papers
 
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (2017) - The original
-- [The Annotated Transformer](https://nlp.seas.harvard.edu/2018/04/03/attention.html) - Excellent walkthrough
+| Paper | Year |
+|-------|:----:|
+| [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | 2017 |
+| [The Annotated Transformer](https://nlp.seas.harvard.edu/2018/04/03/attention.html) | 2018 |
 
 ---
 
-## Try it
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
-The notebook builds a transformer from scratch, trains it on a tiny translation task, and visualizes what the attention heads are looking at.
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb)
+<p align="center">
+  <sub>Build from scratch • Train on tiny dataset • Visualize attention</sub>
+</p>

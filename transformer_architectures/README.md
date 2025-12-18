@@ -1,116 +1,258 @@
-# Transformer Architectures
-
 <p align="center">
   <img src="banner.png" alt="Transformer Architectures" width="100%"/>
 </p>
 
-I got tired of reading papers that explain attention with walls of math but never show you how it actually works. So I implemented 10 transformer variants from scratch — not production code, just readable PyTorch that trains on tiny datasets in a couple minutes.
+<p align="center">
+  <img src="https://img.shields.io/badge/Architectures-10-blue?style=for-the-badge" alt="Architectures"/>
+  <img src="https://img.shields.io/badge/PyTorch-From_Scratch-EE4C2C?style=for-the-badge&logo=pytorch" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/Training-~2_min-green?style=for-the-badge" alt="Training"/>
+</p>
 
-The goal: understand *why* each architecture exists, not just memorize the equations.
+<h1 align="center">🤖 Transformer Architectures</h1>
 
----
+<p align="center">
+  <strong>10 transformer variants implemented from scratch with training code</strong>
+</p>
 
-## What's here
-
-Each folder has:
-- A diagram showing the architecture
-- PyTorch code you can actually read (no 500-line base classes)
-- A Colab notebook that trains on a tiny dataset
-- Visualizations of what the attention is doing
-
-Click any Colab badge to start training immediately.
-
----
-
-## The architectures
-
-### The classics — understand these first
-
-| | What | The idea | Run it |
-|--|------|----------|--------|
-| 01 | [**Vanilla Transformer**](./01_vanilla_transformer/) | The 2017 original. Encoder-decoder, self-attention, the works | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb) |
-| 02 | [**BERT**](./02_bert/) | Encoder only, sees both directions. The king of NLU tasks | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb) |
-| 03 | [**GPT**](./03_gpt/) | Decoder only, predicts next token. This is ChatGPT's architecture | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb) |
-| 04 | [**Vision Transformer**](./04_vision_transformer/) | Treat image patches as tokens. Turns out CNNs aren't necessary | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/04_vision_transformer/demo.ipynb) |
-
-### The efficient ones — when O(N²) hurts
-
-Standard attention compares every token to every other token. That's quadratic. These architectures get around it.
-
-| | What | The trick | Complexity | Run it |
-|--|------|-----------|------------|--------|
-| 05 | [**Transformer-XL**](./05_transformer_xl/) | Cache hidden states between segments | O(N²)/segment | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb) |
-| 06 | [**Sparse Transformer**](./06_sparse_transformer/) | Only attend to some tokens (local + strided) | O(N√N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb) |
-| 07 | [**Performer**](./07_performer/) | Random features to approximate softmax attention | O(N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb) |
-| 08 | [**Reformer**](./08_reformer/) | LSH to find similar tokens + reversible layers | O(N log N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb) |
-| 09 | [**Longformer**](./09_longformer/) | Sliding window for local, global tokens for [CLS] | O(N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb) |
-
-### Scaling up — more parameters, same compute
-
-| | What | The trick | Run it |
-|--|------|-----------|--------|
-| 10 | [**Switch Transformer**](./10_switch_transformer/) | Route tokens to different expert FFNs. 1.6T params, same FLOPs | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb) |
+<p align="center">
+  <em>I got tired of papers that explain attention with walls of math but never show you how it actually works.<br/>
+  So I implemented everything from scratch — readable PyTorch that trains on tiny datasets in ~2 minutes.</em>
+</p>
 
 ---
 
-## How they evolved
+## 📋 What's Here
+
+<table>
+<tr>
+<td>📊</td>
+<td><strong>Architecture diagrams</strong></td>
+<td>Visual explanation of each model</td>
+</tr>
+<tr>
+<td>💻</td>
+<td><strong>PyTorch code</strong></td>
+<td>Clean, readable, no 500-line base classes</td>
+</tr>
+<tr>
+<td>🔥</td>
+<td><strong>Colab notebooks</strong></td>
+<td>Train in browser, see it working</td>
+</tr>
+<tr>
+<td>👁️</td>
+<td><strong>Visualizations</strong></td>
+<td>Attention patterns, loss curves</td>
+</tr>
+</table>
+
+---
+
+## 🏛️ The Classics
+
+> *Understand these first — everything else builds on them*
+
+<table>
+<tr>
+<td align="center" width="25%">
+<a href="./01_vanilla_transformer/">
+<img src="https://img.shields.io/badge/01-Vanilla-4285F4?style=for-the-badge" alt="Vanilla"/><br/>
+<strong>Vanilla Transformer</strong><br/>
+<sub>The 2017 original</sub><br/><br/>
+<img src="https://img.shields.io/badge/Enc--Dec-O(N²)-lightgrey?style=flat-square"/>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶_Train_It-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white"/>
+</a>
+</td>
+<td align="center" width="25%">
+<a href="./02_bert/">
+<img src="https://img.shields.io/badge/02-BERT-34A853?style=for-the-badge" alt="BERT"/><br/>
+<strong>BERT</strong><br/>
+<sub>Bidirectional encoder</sub><br/><br/>
+<img src="https://img.shields.io/badge/Encoder-O(N²)-lightgrey?style=flat-square"/>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb">
+<img src="https://img.shields.io/badge/▶_Train_It-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white"/>
+</a>
+</td>
+<td align="center" width="25%">
+<a href="./03_gpt/">
+<img src="https://img.shields.io/badge/03-GPT-EA4335?style=for-the-badge" alt="GPT"/><br/>
+<strong>GPT</strong><br/>
+<sub>ChatGPT's architecture</sub><br/><br/>
+<img src="https://img.shields.io/badge/Decoder-O(N²)-lightgrey?style=flat-square"/>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb">
+<img src="https://img.shields.io/badge/▶_Train_It-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white"/>
+</a>
+</td>
+<td align="center" width="25%">
+<a href="./04_vision_transformer/">
+<img src="https://img.shields.io/badge/04-ViT-FBBC04?style=for-the-badge" alt="ViT"/><br/>
+<strong>Vision Transformer</strong><br/>
+<sub>Images as patches</sub><br/><br/>
+<img src="https://img.shields.io/badge/Encoder-O(N²)-lightgrey?style=flat-square"/>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/04_vision_transformer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶_Train_It-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white"/>
+</a>
+</td>
+</tr>
+</table>
+
+---
+
+## ⚡ Efficient Attention
+
+> *Standard attention is O(N²). These architectures fix that.*
+
+<table>
+<tr>
+<td align="center" width="20%">
+<a href="./05_transformer_xl/">
+<img src="https://img.shields.io/badge/05-XL-9C27B0?style=for-the-badge"/><br/>
+<strong>Transformer-XL</strong><br/>
+<sub>Memory caching</sub><br/>
+<code>O(N²)/seg</code>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb">
+<img src="https://img.shields.io/badge/▶-Colab-F9AB00?style=flat-square&logo=googlecolab"/>
+</a>
+</td>
+<td align="center" width="20%">
+<a href="./06_sparse_transformer/">
+<img src="https://img.shields.io/badge/06-Sparse-FF5722?style=for-the-badge"/><br/>
+<strong>Sparse</strong><br/>
+<sub>Attend to subset</sub><br/>
+<code>O(N√N)</code>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶-Colab-F9AB00?style=flat-square&logo=googlecolab"/>
+</a>
+</td>
+<td align="center" width="20%">
+<a href="./07_performer/">
+<img src="https://img.shields.io/badge/07-Performer-00BCD4?style=for-the-badge"/><br/>
+<strong>Performer</strong><br/>
+<sub>Random features</sub><br/>
+<code>O(N)</code>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶-Colab-F9AB00?style=flat-square&logo=googlecolab"/>
+</a>
+</td>
+<td align="center" width="20%">
+<a href="./08_reformer/">
+<img src="https://img.shields.io/badge/08-Reformer-795548?style=for-the-badge"/><br/>
+<strong>Reformer</strong><br/>
+<sub>LSH hashing</sub><br/>
+<code>O(N log N)</code>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶-Colab-F9AB00?style=flat-square&logo=googlecolab"/>
+</a>
+</td>
+<td align="center" width="20%">
+<a href="./09_longformer/">
+<img src="https://img.shields.io/badge/09-Longformer-607D8B?style=for-the-badge"/><br/>
+<strong>Longformer</strong><br/>
+<sub>Sliding window</sub><br/>
+<code>O(N)</code>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶-Colab-F9AB00?style=flat-square&logo=googlecolab"/>
+</a>
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 Scaling Up
+
+> *More parameters, same compute*
+
+<table>
+<tr>
+<td align="center">
+<a href="./10_switch_transformer/">
+<img src="https://img.shields.io/badge/10-Switch_Transformer-E91E63?style=for-the-badge"/><br/><br/>
+<strong>Mixture of Experts</strong><br/>
+<sub>1.6 trillion parameters, constant FLOPs</sub><br/><br/>
+<code>Route each token to 1 of N expert FFNs</code>
+</a>
+<br/><br/>
+<a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb">
+<img src="https://img.shields.io/badge/▶_Train_It-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white"/>
+</a>
+</td>
+</tr>
+</table>
+
+---
+
+## 📊 Evolution Timeline
 
 ```
-2017: Vanilla Transformer
-      │
-      └── split into:
+2017 ─── Vanilla Transformer ("Attention Is All You Need")
           │
-          ├── BERT (2018) — encoder only, bidirectional
-          │   └── RoBERTa, ALBERT, DeBERTa...
-          │
-          └── GPT (2018) — decoder only, autoregressive  
-              └── GPT-2 → GPT-3 → ChatGPT → GPT-4
+2018 ────┼── BERT (encoder-only, bidirectional)
+          └── GPT (decoder-only, autoregressive)
+          
+2019 ────┼── Transformer-XL (memory across segments)
+          └── Sparse Transformer (O(N√N))
+          
+2020 ────┼── ViT (images as patches)
+          ├── Longformer (sliding window)
+          ├── Performer (random features)
+          └── Reformer (LSH + reversible)
+          
+2021 ─── Switch Transformer (MoE at scale)
 
-2019: "Attention is O(N²), let's fix that"
-      │
-      ├── Transformer-XL — recurrence across segments
-      └── Sparse Transformer — attend to subset
-
-2020: Long sequence boom
-      │
-      ├── Longformer — sliding window + global
-      ├── Performer — random features (FAVOR+)
-      ├── Reformer — LSH hashing
-      └── ViT — images as patches
-
-2021: Scale everything
-      │
-      └── Switch Transformer — 1.6T params via MoE
-
-2022-2024: Modern LLMs
-      │
-      ├── FlashAttention (exact attention, but fast)
-      ├── LLaMA, Mistral, Mixtral (open weights)
-      ├── Mamba (no attention at all!)
-      └── DeepSeek-V3 ($5.5M to train 671B)
+2022-2024 ─── FlashAttention, LLaMA, Mamba, Mixtral, DeepSeek
 ```
 
 ---
 
-## What I'd actually use in 2025
+## 🎯 What to Use in 2025
 
-Honest opinions:
-
-| Task | Just use this |
-|------|--------------|
-| Text classification | Fine-tune BERT or DeBERTa |
-| Chatbot / generation | Mistral 7B or LLaMA 3.1 |
-| Long documents | Native long-context models (Gemini, Claude) |
-| Images | ViT or DINOv2 |
-| Scale without $$$ | Mixtral or DeepSeek |
-| Embeddings | E5-mistral or GTE |
-
-The "efficient" architectures (Performer, Reformer) were cool research but FlashAttention basically solved the problem differently — it's exact attention that just runs fast. Most production systems use that now.
+| Task | My Recommendation |
+|------|-------------------|
+| 📝 Classification | BERT / DeBERTa |
+| 💬 Chatbot | Mistral 7B / LLaMA 3.1 |
+| 📄 Long documents | Native long-context (Gemini, Claude) |
+| 🖼️ Images | ViT / DINOv2 |
+| 💰 Scale on budget | Mixtral / DeepSeek (MoE) |
+| 🔋 Efficiency | Mamba / RWKV |
 
 ---
 
-## Running locally
+## 🚀 Quick Start
 
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### ☁️ Easiest: Colab
+Click any **▶ Colab** badge above.
+- No setup needed
+- GPU included
+- ~2 min to train
+
+</td>
+<td width="50%" valign="top">
+
+### 💻 Local Setup
 ```bash
 git clone https://github.com/gaurav-redhat/transformer_problems.git
 cd transformer_problems/transformer_architectures
@@ -118,31 +260,58 @@ pip install torch matplotlib numpy
 jupyter notebook
 ```
 
-Or just click the Colab badges. They work.
+</td>
+</tr>
+</table>
 
 ---
 
-## If you want the papers
+## 🎓 Learning Path
 
-**Start with these:**
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (2017) — the original
-- [BERT](https://arxiv.org/abs/1810.04805) (2018) — bidirectional pretraining
-- [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) (GPT-2, 2019)
-
-**Efficient attention:**
-- [Longformer](https://arxiv.org/abs/2004.05150) (2020) — the practical one
-- [FlashAttention](https://arxiv.org/abs/2205.14135) (2022) — the one everyone uses
-
-**Modern stuff:**
-- [LLaMA](https://arxiv.org/abs/2302.13971) (2023) — open LLM
-- [Mamba](https://arxiv.org/abs/2312.00752) (2023) — no attention, SSM instead
+| Level | Start Here |
+|-------|------------|
+| 🟢 **Beginner** | Vanilla → GPT → BERT |
+| 🟡 **Intermediate** | ViT → Longformer |
+| 🔴 **Advanced** | Performer → Switch Transformer |
 
 ---
 
-## Contributing
+## 📚 Papers
 
-Found a bug? Think an explanation is wrong? PRs welcome.
+<details>
+<summary><strong>🏛️ Foundations (2017-2020)</strong></summary>
 
-## License
+| Paper | Year | Key Innovation |
+|-------|:----:|----------------|
+| [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | 2017 | Transformer |
+| [BERT](https://arxiv.org/abs/1810.04805) | 2018 | Bidirectional pretraining |
+| [GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | 2019 | Scaled LM |
+| [Transformer-XL](https://arxiv.org/abs/1901.02860) | 2019 | Segment recurrence |
+| [Sparse Transformers](https://arxiv.org/abs/1904.10509) | 2019 | O(N√N) |
+| [ViT](https://arxiv.org/abs/2010.11929) | 2020 | Image patches |
+| [Longformer](https://arxiv.org/abs/2004.05150) | 2020 | Sliding window |
+| [Performer](https://arxiv.org/abs/2009.14794) | 2020 | FAVOR+ |
 
-MIT
+</details>
+
+<details>
+<summary><strong>🚀 Modern Era (2021-2024)</strong></summary>
+
+| Paper | Year | Key Innovation |
+|-------|:----:|----------------|
+| [Switch Transformer](https://arxiv.org/abs/2101.03961) | 2021 | MoE top-1 |
+| [RoPE](https://arxiv.org/abs/2104.09864) | 2021 | Rotary PE |
+| [FlashAttention](https://arxiv.org/abs/2205.14135) | 2022 | IO-aware attention |
+| [LLaMA](https://arxiv.org/abs/2302.13971) | 2023 | Open LLM |
+| [Mamba](https://arxiv.org/abs/2312.00752) | 2023 | State space model |
+| [Mixtral](https://arxiv.org/abs/2401.04088) | 2024 | Open MoE |
+| [DeepSeek-V3](https://arxiv.org/abs/2412.19437) | 2024 | 671B MoE, $5.5M |
+
+</details>
+
+---
+
+<p align="center">
+  <strong>🤝 Contributing</strong> — Found a bug? PRs welcome!<br/>
+  <strong>📄 License</strong> — MIT
+</p>

@@ -1,58 +1,98 @@
-# Sparse Transformer
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Sparse_Transformer-FF5722?style=for-the-badge" alt="Sparse"/>
+  <img src="https://img.shields.io/badge/Complexity-O(N√N)-green?style=for-the-badge" alt="Complexity"/>
+  <img src="https://img.shields.io/badge/Source-OpenAI-lightgrey?style=for-the-badge" alt="Source"/>
+</p>
 
-[← Back](../README.md) | [← Prev: Transformer-XL](../05_transformer_xl/README.md) | [Next: Performer →](../07_performer/README.md)
+<h1 align="center">06. Sparse Transformer</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../05_transformer_xl/README.md">← Prev</a> •
+  <a href="../07_performer/README.md">Next: Performer →</a>
+</p>
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-![Architecture](architecture.png)
-
-The O(N²) problem gets bad fast. 4K tokens = 16M attention operations. 16K tokens = 256M. OpenAI's Sparse Transformer asks: do we really need every token to attend to every other token? What if we only compute attention for pairs that matter?
-
----
-
-## The insight
-
-Most attention weights are close to zero anyway. The model learns to ignore most token pairs. So why compute them at all?
-
-Sparse Transformer uses **patterns** - predefined rules for which tokens can attend to which. Instead of O(N²), you get O(N√N).
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
 ---
 
-## The patterns
+## 💡 The Idea
 
-**1. Local (sliding window)**
+The O(N²) problem gets bad fast. Do we really need every token to attend to every other token?
 
-Each token attends to nearby tokens:
+> *What if we only compute attention for pairs that matter?*
+
+---
+
+## 📈 The Scale Problem
+
+| Sequence | Dense O(N²) | Sparse O(N√N) | Speedup |
+|:--------:|:-----------:|:-------------:|:-------:|
+| 1K | 1M | 32K | **32×** |
+| 4K | 16M | 256K | **64×** |
+| 16K | 256M | 2M | **128×** |
+
+---
+
+## 🎯 The Patterns
+
+<table>
+<tr>
+<td align="center" width="33%">
+
+### 🔲 Local
+Attend to nearby tokens
+
 ```
-Token 5 attends to: [3, 4, 5, 6, 7]  (window = 5)
+Token 5 → [3,4,5,6,7]
 ```
-Good for: syntax, local context
 
-**2. Strided**
+*Good for: syntax, local context*
 
-Each token attends to every k-th token:
+</td>
+<td align="center" width="33%">
+
+### 📏 Strided
+Attend to every k-th token
+
 ```
-Token 8 attends to: [0, 4, 8]  (stride = 4)
+Token 8 → [0, 4, 8]
 ```
-Good for: long-range dependencies
 
-**3. Combined (factorized)**
+*Good for: long-range*
 
-Alternate between patterns across layers:
+</td>
+<td align="center" width="33%">
+
+### 🔄 Combined
+Alternate patterns by layer
+
 ```
-Layer 1: Local attention
-Layer 2: Strided attention
-Layer 3: Local attention
+L1: Local
+L2: Strided
+L3: Local
 ...
 ```
 
-Information flows locally in some layers, globally in others. After a few layers, any two tokens can communicate through the network.
+*Best of both*
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Visualizing the patterns
+## 👁️ Visualizing Patterns
 
 ```
 Dense:              Local:              Strided:            Combined:
@@ -63,25 +103,23 @@ Dense:              Local:              Strided:            Combined:
 ...                 ...                 ...                 ...
 ```
 
-Dense = compute everything. Sparse = compute only where it's 1.
+---
+
+## ➗ The Math
+
+### Dense Attention
+```
+A_ij = 1 for all i, j → O(N²)
+```
+
+### Sparse Attention
+```
+A_ij = 1 only if j ∈ S(i), |S(i)| = O(√N) → O(N√N)
+```
 
 ---
 
-## The numbers
-
-| Sequence | Dense O(N²) | Sparse O(N√N) | Speedup |
-|----------|-------------|---------------|---------|
-| 1K | 1M | 32K | 32× |
-| 4K | 16M | 256K | 64× |
-| 16K | 256M | 2M | 128× |
-
-The longer the sequence, the more you save.
-
----
-
-## Code
-
-Creating a sparse mask:
+## 💻 Code
 
 ```python
 def sparse_mask(seq_len, window_size, stride):
@@ -98,11 +136,7 @@ def sparse_mask(seq_len, window_size, stride):
             mask[i, j] = 1
     
     return mask
-```
 
-Using it in attention:
-
-```python
 def sparse_attention(Q, K, V, mask):
     scores = Q @ K.T / sqrt(d_k)
     scores = scores.masked_fill(mask == 0, float('-inf'))
@@ -111,33 +145,39 @@ def sparse_attention(Q, K, V, mask):
 
 ---
 
-## Where it's used
+## 🎯 Use Cases
 
-- **GPT-3** uses sparse attention in some layers
-- **Image generation** (ImageGPT) - 64×64 images = 4096 tokens
-- **Audio** - Raw audio needs very long sequences
-
-The paper trained on sequences up to 16K tokens - impossible with dense attention at the time.
-
----
-
-## The tradeoff
-
-Sparse attention is an approximation. You're betting that the tokens you skip don't matter. For most tasks, this works. But if your task genuinely needs all-pairs attention, you'll lose quality.
-
-Modern approach: Use FlashAttention instead - it's exact attention but fast. Sparse attention was more important before FlashAttention existed.
+| Application | Why Sparse Helps |
+|-------------|------------------|
+| **GPT-3** | Some layers use sparse attention |
+| **Image generation** | 64×64 = 4096 tokens |
+| **Audio** | Raw audio = very long sequences |
 
 ---
 
-## Papers
+## ⚠️ The Tradeoff
 
-- [Sparse Transformers](https://arxiv.org/abs/1904.10509) (2019) - Original
-- [ImageGPT](https://cdn.openai.com/papers/Generative_Pretraining_from_Pixels_V2.pdf) (2020) - Uses sparse attention
+> *Sparse attention is an approximation — you're betting skipped tokens don't matter.*
+
+Modern approach: **FlashAttention** — exact attention but fast. Sparse was more important before FlashAttention existed.
 
 ---
 
-## Try it
+## 📚 Papers
 
-The notebook builds different sparse patterns, visualizes them, compares to dense attention, and measures the speedup.
+| Paper | Year |
+|-------|:----:|
+| [Sparse Transformers](https://arxiv.org/abs/1904.10509) | 2019 |
+| [ImageGPT](https://cdn.openai.com/papers/Generative_Pretraining_from_Pixels_V2.pdf) | 2020 |
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb)
+---
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
+
+<p align="center">
+  <sub>Build sparse patterns • Visualize masks • Measure speedup</sub>
+</p>

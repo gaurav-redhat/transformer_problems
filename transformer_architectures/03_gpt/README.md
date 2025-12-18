@@ -1,35 +1,47 @@
-# GPT
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-GPT-EA4335?style=for-the-badge" alt="GPT"/>
+  <img src="https://img.shields.io/badge/Type-Decoder--Only-lightgrey?style=for-the-badge" alt="Type"/>
+  <img src="https://img.shields.io/badge/Direction-Autoregressive-blue?style=for-the-badge" alt="Direction"/>
+</p>
 
-[← Back](../README.md) | [← Prev: BERT](../02_bert/README.md) | [Next: ViT →](../04_vision_transformer/README.md)
+<h1 align="center">03. GPT</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../02_bert/README.md">← Prev</a> •
+  <a href="../04_vision_transformer/README.md">Next: ViT →</a>
+</p>
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-![Architecture](architecture.png)
-
-This is it. The architecture behind ChatGPT, Claude, LLaMA, Mistral - pretty much every chatbot and code assistant you've used. The idea is absurdly simple: **predict the next token**. Do that well enough, at scale, and you get intelligence.
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
 ---
 
-## The core idea
+## 💡 The Idea
 
-Train on massive text with one objective:
+This is it. The architecture behind ChatGPT, Claude, LLaMA, Mistral — pretty much every chatbot you've used.
+
+> *The idea is absurdly simple: **predict the next token**.*
 
 ```
 Input:  "The cat sat on the"
-Output: "mat" (predict what comes next)
+Output: "mat"
 ```
 
-That's it. No fancy objectives, no task-specific heads. Just next token prediction, scaled up with more data and parameters.
-
-Turns out this simple objective, applied to enough text, learns grammar, facts, reasoning, and code. Nobody fully understands why it works this well.
+Scale this up with more data and parameters → emergent abilities.
 
 ---
 
-## Architecture
-
-GPT is the decoder half of the original transformer:
+## 🏗️ Architecture
 
 ```
 Tokens
@@ -43,13 +55,11 @@ Linear → Softmax
 Next Token Probabilities
 ```
 
-No encoder. Just stack decoder layers and let it learn.
-
 ---
 
-## The causal mask
+## 🎭 The Causal Mask
 
-This is the key difference from BERT. Each token can only see itself and past tokens:
+> *Each token can only see itself and past tokens*
 
 ```
 Position:    1  2  3  4
@@ -59,73 +69,51 @@ Token 3:     ✓  ✓  ✓  ✗
 Token 4:     ✓  ✓  ✓  ✓
 ```
 
-When predicting token 4, the model only sees tokens 1-3. This lets it generate text autoregressively without cheating.
+This prevents cheating during training and enables generation.
 
 ---
 
-## Why decoder-only won
+## 📈 The Evolution
 
-The original transformer had encoder + decoder. BERT used encoder-only. But for generation, decoder-only (GPT-style) won because:
-
-1. **Simpler**: One stack, not two
-2. **Unified**: Same architecture for training and generation
-3. **Scalable**: No cross-attention overhead
-4. **Emergent abilities**: Scale seems to unlock new capabilities
-
-Every major LLM today is decoder-only.
+| Model | Year | Params | Context | Milestone |
+|-------|:----:|:------:|:-------:|-----------|
+| GPT-1 | 2018 | 117M | 512 | Proved the concept |
+| GPT-2 | 2019 | 1.5B | 1024 | Zero-shot abilities |
+| GPT-3 | 2020 | 175B | 2048 | In-context learning |
+| GPT-4 | 2023 | ~1.8T? | 128K | Multimodal, RLHF |
 
 ---
 
-## The evolution
+## ➗ The Math
 
-| Model | Year | Params | What changed |
-|-------|------|--------|--------------|
-| GPT-1 | 2018 | 117M | Proved the concept |
-| GPT-2 | 2019 | 1.5B | Zero-shot capabilities |
-| GPT-3 | 2020 | 175B | In-context learning, few-shot |
-| GPT-4 | 2023 | ~1.8T? | MoE, multimodal, RLHF |
+### Autoregressive Probability
 
-The progression: same architecture, more scale, better data, alignment tuning.
-
----
-
-## Generation
-
-Once trained, you generate by sampling:
-
-```python
-def generate(model, prompt, max_tokens, temperature=1.0):
-    for _ in range(max_tokens):
-        logits = model(prompt)[:, -1, :] / temperature
-        probs = F.softmax(logits, dim=-1)
-        next_token = torch.multinomial(probs, 1)
-        prompt = torch.cat([prompt, next_token], dim=1)
-    return prompt
+```
+P(x) = P(x₁) × P(x₂|x₁) × P(x₃|x₁,x₂) × ... 
 ```
 
-Temperature controls randomness:
-- Low (0.1): Predictable, repetitive
-- High (1.5): Creative, sometimes nonsense
-- Medium (0.7): Usually what you want
+### Loss Function
+
+```
+L = -∑ log P(xₜ | x₁, ..., xₜ₋₁)
+```
+
+Just cross-entropy on next token prediction.
 
 ---
 
-## GPT vs BERT
+## 🆚 GPT vs BERT
 
 | | GPT | BERT |
-|---|-----|------|
-| Architecture | Decoder-only | Encoder-only |
-| Attention | Causal (left only) | Bidirectional |
-| Training | Next token prediction | Masked language model |
-| Good at | Generation | Understanding |
-
-Use BERT for classification. Use GPT for generation. Or just use GPT for everything (modern LLMs are surprisingly good at classification too).
+|:-:|:---:|:----:|
+| **Architecture** | Decoder-only | Encoder-only |
+| **Attention** | Causal (→) | Bidirectional (↔) |
+| **Training** | Next token | Masked LM |
+| **Best for** | Generation | Understanding |
 
 ---
 
-## Code
-
-The causal attention is simple - just mask future positions:
+## 💻 Code
 
 ```python
 class CausalAttention(nn.Module):
@@ -136,29 +124,48 @@ class CausalAttention(nn.Module):
         self.register_buffer('mask', mask)
     
     def forward(self, x):
-        B, T, C = x.shape
-        Q, K, V = self.qkv(x).chunk(3, dim=-1)
-        
-        attn = (Q @ K.transpose(-2, -1)) / math.sqrt(self.d_k)
+        attn = (Q @ K.T) / math.sqrt(d_k)
         attn = attn.masked_fill(self.mask[:T, :T] == 0, float('-inf'))
-        attn = F.softmax(attn, dim=-1)
-        
-        return attn @ V
+        return F.softmax(attn, dim=-1) @ V
+
+# Generation
+def generate(model, prompt, max_tokens, temperature=1.0):
+    for _ in range(max_tokens):
+        logits = model(prompt)[:, -1, :] / temperature
+        next_token = torch.multinomial(F.softmax(logits, -1), 1)
+        prompt = torch.cat([prompt, next_token], dim=1)
+    return prompt
 ```
 
 ---
 
-## Papers
+## 🌡️ Temperature
 
-- [GPT-1](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) (2018)
-- [GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) (2019)
-- [GPT-3](https://arxiv.org/abs/2005.14165) (2020)
-- [InstructGPT](https://arxiv.org/abs/2203.02155) (2022) - The RLHF paper
+| Value | Effect |
+|:-----:|--------|
+| **0.1** | Predictable, repetitive |
+| **0.7** | Balanced (usually best) |
+| **1.5** | Creative, sometimes nonsense |
 
 ---
 
-## Try it
+## 📚 Papers
 
-The notebook builds GPT from scratch, trains a character-level language model, and lets you generate text with different temperatures.
+| Paper | Year |
+|-------|:----:|
+| [GPT-1](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) | 2018 |
+| [GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | 2019 |
+| [GPT-3](https://arxiv.org/abs/2005.14165) | 2020 |
+| [InstructGPT](https://arxiv.org/abs/2203.02155) | 2022 |
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb)
+---
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
+
+<p align="center">
+  <sub>Build GPT from scratch • Train char-level LM • Generate text</sub>
+</p>

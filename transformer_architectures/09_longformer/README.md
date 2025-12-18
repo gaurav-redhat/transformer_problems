@@ -1,88 +1,131 @@
-# Longformer
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Longformer-607D8B?style=for-the-badge" alt="Longformer"/>
+  <img src="https://img.shields.io/badge/Complexity-O(N)-green?style=for-the-badge" alt="Complexity"/>
+  <img src="https://img.shields.io/badge/Method-Sliding_Window-blue?style=for-the-badge" alt="Method"/>
+</p>
 
-[← Back](../README.md) | [← Prev: Reformer](../08_reformer/README.md) | [Next: Switch Transformer →](../10_switch_transformer/README.md)
+<h1 align="center">09. Longformer</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../08_reformer/README.md">← Prev</a> •
+  <a href="../10_switch_transformer/README.md">Next: Switch →</a>
+</p>
 
----
-
-![Architecture](architecture.png)
-
-Longformer is probably the most practical of the efficient attention methods. The idea is simple: **local attention for most tokens, global attention for special tokens**. No random features, no LSH, no complicated approximations. Just a sensible pattern that works.
-
----
-
-## The insight
-
-Think about how you read a long document. Most words only matter in context of nearby words. But some tokens - like the title, or the question you're trying to answer - need to see everything.
-
-Longformer does exactly this:
-- **Local**: Each token attends to a window of neighbors
-- **Global**: A few special tokens attend to everything (and everything attends to them)
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-## Sliding window attention
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
-Each token attends to w tokens around it:
+---
+
+## 💡 The Idea
+
+Longformer is probably the most **practical** efficient attention method.
+
+> *Local attention for most tokens + Global attention for special tokens.*
+
+No random features. No LSH. Just a sensible pattern that works.
+
+---
+
+## 🎯 The Insight
+
+Think about how you read:
+- Most words only matter in context of **nearby words**
+- But some tokens (title, question) need to see **everything**
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+### 🔲 Local (Sliding Window)
+Each token attends to w neighbors
 
 ```
-Token i attends to: [i-w/2, ..., i, ..., i+w/2]
+Token i → [i-w/2, ..., i, ..., i+w/2]
 ```
 
-With w=512 and N=4096:
-- Standard: 4096² = 16M operations
-- Sliding window: 4096 × 512 = 2M operations
-- **8× speedup**
+**Complexity: O(N × w)**
 
-And it's still exact - no approximation. You're just computing attention for pairs that matter.
+</td>
+<td align="center" width="50%">
+
+### 🌍 Global
+Special tokens see everything
+
+```
+[CLS] → [all tokens]
+[all tokens] → [CLS]
+```
+
+**For: classification, questions**
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Global attention
+## 📊 The Speedup
 
-Some tokens need full context:
-- **[CLS]** for classification - needs to see the whole document
-- **Question tokens** for QA - need to find the answer anywhere
-- **Section markers** for summarization
+```
+N = 4096, w = 512
 
-For these tokens, attention is bidirectional and global:
+Standard:  4096² = 16M operations
+Longformer: 4096 × 512 = 2M operations
+
+Speedup: 8×
 ```
-Global tokens see: everything
-Everything sees: global tokens
-```
+
+And it's **exact** — no approximation!
 
 ---
 
-## Task-specific globals
+## 🎯 Task-Specific Globals
 
-| Task | Which tokens are global |
-|------|-------------------------|
-| Classification | [CLS] |
+| Task | Global Tokens |
+|------|:-------------:|
+| Classification | `[CLS]` |
 | Question Answering | Question tokens |
-| Summarization | [CLS] + paragraph starts |
+| Summarization | `[CLS]` + paragraph starts |
 | NER | None (all local) |
 
-You choose what's global based on your task. More globals = more compute but better long-range reasoning.
-
 ---
 
-## The math
+## 📐 The Math
 
 ```
 A_ij = 1 if:
-  - |i - j| ≤ w/2  (within window)
+  - |i - j| ≤ w/2       (within window)
   - OR i is global
   - OR j is global
 
 Complexity: O(N × (w + g))
 ```
 
-Where g = number of global tokens (usually tiny compared to N).
+Where g = number of global tokens (usually tiny).
 
 ---
 
-## Code
+## 🆚 Longformer vs BERT
+
+| Model | Max Length | Memory (4K) |
+|-------|:----------:|:-----------:|
+| BERT-base | 512 | OOM ❌ |
+| Longformer-base | 4096 | ~3GB ✅ |
+| Longformer-large | 4096 | ~8GB ✅ |
+
+---
+
+## 💻 Code
 
 ```python
 def sliding_window_mask(seq_len, window_size):
@@ -105,75 +148,46 @@ def add_global(mask, global_indices):
 
 ---
 
-## Dilated attention
+## ✅ When to Use
 
-For even larger receptive fields without more compute, use dilation:
-
-```
-Standard window (d=1): [3, 4, 5, 6, 7]
-Dilated window (d=2):  [0, 2, 4, 6, 8]
-```
-
-Lower layers use tight windows (local patterns), higher layers use dilated windows (global patterns).
+| ✅ Good For | ❌ Not Needed |
+|------------|--------------|
+| Long document classification | Short texts (< 512) |
+| Long-form QA | Tasks needing full attention |
+| Summarization | |
+| Legal/medical docs | |
 
 ---
 
-## Model sizes
-
-| Model | Layers | Hidden | Window | Max Length |
-|-------|--------|--------|--------|------------|
-| Longformer-base | 12 | 768 | 512 | 4096 |
-| Longformer-large | 24 | 1024 | 512 | 4096 |
-
-4096 tokens is enough for most documents. For longer, you can extend with gradient checkpointing.
-
----
-
-## When to use Longformer
-
-**Good for:**
-- Long document classification
-- Question answering over long context
-- Summarization
-- Legal, medical, scientific documents
-
-**Not needed for:**
-- Short texts (< 512 tokens) - just use BERT
-- When you actually need all-pairs attention
-- Tasks where local context doesn't help
-
----
-
-## Longformer vs alternatives
+## 🆚 vs Other Methods
 
 | Method | Complexity | Exact? | Simple? |
-|--------|------------|--------|---------|
-| Standard | O(N²) | Yes | Yes |
-| Sparse | O(N√N) | Patterns only | Medium |
-| Performer | O(N) | Approximation | Complex |
-| Reformer | O(N log N) | LSH approximation | Complex |
-| **Longformer** | **O(N × w)** | **Yes (within pattern)** | **Yes** |
-| FlashAttention | O(N²) | Yes | Yes (library) |
+|--------|:----------:|:------:|:-------:|
+| Standard | O(N²) | ✅ | ✅ |
+| Sparse | O(N√N) | ❌ | ⚠️ |
+| Performer | O(N) | ❌ | ❌ |
+| Reformer | O(N log N) | ❌ | ❌ |
+| **Longformer** | **O(N × w)** | **✅** | **✅** |
 
-Longformer wins on simplicity. You don't need special kernels or approximations - it's just masked attention with a sensible pattern.
-
----
-
-## Related: BigBird
-
-Google's BigBird (2020) is similar but adds random attention - each token attends to some random tokens as well. In theory this helps with worst-case coverage. In practice, Longformer works just as well and is simpler.
+> 💡 *Longformer wins on simplicity — just masked attention with a sensible pattern.*
 
 ---
 
-## Papers
+## 📚 Papers
 
-- [Longformer](https://arxiv.org/abs/2004.05150) (2020) - Original
-- [BigBird](https://arxiv.org/abs/2007.14062) (2020) - Google's variant
+| Paper | Year |
+|-------|:----:|
+| [Longformer](https://arxiv.org/abs/2004.05150) | 2020 |
+| [BigBird](https://arxiv.org/abs/2007.14062) | 2020 |
 
 ---
 
-## Try it
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
-The notebook implements sliding window attention, adds global attention, compares to full attention, and trains on a long document task.
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb)
+<p align="center">
+  <sub>Implement sliding window • Add global attention • Compare vs full attention</sub>
+</p>

@@ -1,158 +1,156 @@
-# Performer
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Performer-00BCD4?style=for-the-badge" alt="Performer"/>
+  <img src="https://img.shields.io/badge/Complexity-O(N)-green?style=for-the-badge" alt="Complexity"/>
+  <img src="https://img.shields.io/badge/Method-FAVOR+-orange?style=for-the-badge" alt="Method"/>
+</p>
 
-[← Back](../README.md) | [← Prev: Sparse Transformer](../06_sparse_transformer/README.md) | [Next: Reformer →](../08_reformer/README.md)
+<h1 align="center">07. Performer</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../06_sparse_transformer/README.md">← Prev</a> •
+  <a href="../08_reformer/README.md">Next: Reformer →</a>
+</p>
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-![Architecture](architecture.png)
-
-Most "efficient attention" methods skip computations (sparse) or make approximations (Reformer's LSH). Performer does something cleverer: it rewrites the attention equation so that you can compute it in a different order - and that order happens to be O(N) instead of O(N²).
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
 ---
 
-## The key insight
+## 💡 The Idea
 
-Standard attention:
+Most efficient attention methods skip computations or use heuristics. Performer does something clever:
+
+> *Rewrite the attention equation so you can compute it in a different order — O(N) instead of O(N²).*
+
+---
+
+## 🔑 The Key Insight
+
+**Standard attention:**
 ```
 Attention = softmax(QK^T) × V
 ```
+↳ Must compute QK^T first → N×N matrix 🚫
 
-The problem is QK^T - that's an N×N matrix. You have to compute it before multiplying by V.
-
-But what if we could decompose softmax as:
+**What if we could decompose softmax?**
 ```
 softmax(q·k) ≈ φ(q) · φ(k)
 ```
 
-Then:
+**Then:**
 ```
 Attention ≈ φ(Q) × (φ(K)^T × V)
 ```
-
-Now you can compute **K^T × V first** (that's a d×d matrix, much smaller than N×N), then multiply by φ(Q).
-
-The order of operations changes from O(N²) to O(N). That's the whole trick.
+↳ Compute K^T × V first → d×d matrix ✅
 
 ---
 
-## How the decomposition works
-
-Performer uses **random features** to approximate the softmax kernel. The math is deep, but the intuition:
-
-1. Sample random vectors ω₁, ω₂, ..., ωₘ
-2. Define φ(x) = exp(-||x||²/2) × [exp(ω₁·x), exp(ω₂·x), ...]
-3. Then φ(q)·φ(k) ≈ exp(q·k)
-
-This is called **FAVOR+** (Fast Attention Via positive Orthogonal Random features).
-
----
-
-## The complexity breakdown
+## 📊 The Numbers
 
 | Operation | Standard | Performer |
-|-----------|----------|-----------|
+|-----------|:--------:|:---------:|
 | QK^T | O(N² × d) | — |
 | φ(K)^T × V | — | O(N × d × m) |
-| φ(Q) × (K^TV) | — | O(N × d × m) |
 | **Total** | **O(N² × d)** | **O(N × d × m)** |
 
-When N >> d and m ≈ d: **huge savings**.
+### Example
 
-Example with N=16384, d=64, m=64:
-- Standard: 17 billion operations
-- Performer: 67 million operations
-- **256× speedup**
+```
+N = 16,384  d = 64  m = 64
+
+Standard:  16,384² × 64 = 17B operations
+Performer: 16,384 × 64² = 67M operations
+
+Speedup: ~256×
+```
 
 ---
 
-## Code
-
-The random feature map:
+## 🎲 Random Feature Map (FAVOR+)
 
 ```python
 def random_feature_map(x, omega):
     # x: (B, N, d), omega: (d, m) random projections
     projection = x @ omega  # (B, N, m)
     norm_sq = (x ** 2).sum(dim=-1, keepdim=True) / 2
-    features = torch.exp(projection - norm_sq) / math.sqrt(omega.size(1))
+    features = torch.exp(projection - norm_sq) / sqrt(m)
     return features
 ```
 
-FAVOR+ attention:
+**FAVOR+** = Fast Attention Via positive Orthogonal Random features
+
+---
+
+## 💻 Code
 
 ```python
 def favor_attention(Q, K, V, omega):
     Q_prime = random_feature_map(Q, omega)  # (B, N, m)
     K_prime = random_feature_map(K, omega)  # (B, N, m)
     
-    # THE TRICK: compute K'V first
+    # THE TRICK: compute K'V first!
     KV = K_prime.transpose(-2, -1) @ V       # (B, m, d)
-    K_sum = K_prime.sum(dim=1, keepdim=True).T  # (B, m, 1)
+    K_sum = K_prime.sum(dim=1, keepdim=True).T
     
     numerator = Q_prime @ KV                  # (B, N, d)
-    denominator = Q_prime @ K_sum             # (B, N, 1)
+    denominator = Q_prime @ K_sum
     
     return numerator / (denominator + 1e-6)
 ```
 
 ---
 
-## The catch
+## ⚖️ The Tradeoff
 
-It's an **approximation**. The more random features (larger m), the better the approximation, but the more compute. You're trading accuracy for speed.
+| Aspect | Performer | Standard |
+|--------|:---------:|:--------:|
+| Complexity | O(N) | O(N²) |
+| Exact? | ❌ Approximation | ✅ Exact |
+| Accuracy | Depends on m | Perfect |
+| Memory | Low | High |
 
-In practice, m ≈ d works well for most tasks. But if you need exact attention, Performer isn't it.
-
----
-
-## Causal (GPT-style) Performer
-
-For autoregressive models, you need causal attention. Performer handles this with **prefix sums**:
-
-```python
-def causal_favor(Q_prime, K_prime, V):
-    outputs = []
-    KV_cumsum = 0
-    K_cumsum = 0
-    
-    for t in range(N):
-        KV_cumsum += K_prime[:, t:t+1].T @ V[:, t:t+1]
-        K_cumsum += K_prime[:, t:t+1].T
-        
-        out_t = Q_prime[:, t:t+1] @ KV_cumsum / (Q_prime[:, t:t+1] @ K_cumsum + eps)
-        outputs.append(out_t)
-    
-    return torch.cat(outputs, dim=1)
-```
-
-You maintain running sums as you go. Still O(N).
+> 💡 *More random features (larger m) = better approximation but more compute*
 
 ---
 
-## Performer vs other methods
+## 🆚 vs Other Methods
 
-| Method | Complexity | Exact? | Practical? |
-|--------|------------|--------|------------|
-| Standard | O(N²) | Yes | For short sequences |
-| Sparse | O(N√N) | No (misses pairs) | Yes, widely used |
-| Performer | O(N) | No (approximation) | Sometimes |
-| FlashAttention | O(N²) | Yes | Yes, the current standard |
+| Method | Complexity | Exact? |
+|--------|:----------:|:------:|
+| Standard | O(N²) | ✅ |
+| Sparse | O(N√N) | ❌ (misses pairs) |
+| **Performer** | **O(N)** | ❌ (approx) |
+| FlashAttention | O(N²) | ✅ |
 
-Performer was exciting when it came out. Then FlashAttention showed you can make exact attention fast through better memory management. In practice, most people now use FlashAttention instead.
-
----
-
-## Papers
-
-- [Performer](https://arxiv.org/abs/2009.14794) (2020) - Original
-- [Random Features for Kernels](https://papers.nips.cc/paper/2007/hash/013a006f03dbc5392effeb8f18fda755-Abstract.html) - The theory behind it
+> ⚠️ *FlashAttention is now preferred — exact attention that's also fast.*
 
 ---
 
-## Try it
+## 📚 Papers
 
-The notebook implements FAVOR+ from scratch, compares approximation quality vs exact attention, and measures speedup on long sequences.
+| Paper | Year |
+|-------|:----:|
+| [Performer](https://arxiv.org/abs/2009.14794) | 2020 |
+| [Random Features for Kernels](https://papers.nips.cc/paper/2007/hash/013a006f03dbc5392effeb8f18fda755-Abstract.html) | 2007 |
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb)
+---
+
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
+
+<p align="center">
+  <sub>Implement FAVOR+ • Compare approximation quality • Measure speedup</sub>
+</p>

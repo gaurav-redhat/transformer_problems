@@ -1,165 +1,164 @@
-# BERT
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-BERT-34A853?style=for-the-badge" alt="BERT"/>
+  <img src="https://img.shields.io/badge/Type-Encoder--Only-lightgrey?style=for-the-badge" alt="Type"/>
+  <img src="https://img.shields.io/badge/Direction-Bidirectional-blue?style=for-the-badge" alt="Direction"/>
+</p>
 
-[← Back](../README.md) | [← Prev: Vanilla](../01_vanilla_transformer/README.md) | [Next: GPT →](../03_gpt/README.md)
+<h1 align="center">02. BERT</h1>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb)
+<p align="center">
+  <a href="../README.md">← Back</a> •
+  <a href="../01_vanilla_transformer/README.md">← Prev</a> •
+  <a href="../03_gpt/README.md">Next: GPT →</a>
+</p>
 
----
-
-![Architecture](architecture.png)
-
-BERT changed how we think about NLP. Instead of training a model for each task, you pretrain once on tons of text, then fine-tune for anything - classification, QA, NER, whatever.
-
-The key insight: let the model see **both directions**. GPT only sees left context. BERT sees everything.
-
----
-
-## Why it matters
-
-Before BERT (2018), we trained separate models for each task. After BERT, we realized you could:
-
-1. Pretrain on massive unlabeled text (cheap, scales)
-2. Fine-tune on your small labeled dataset (expensive, limited)
-
-This is now the default approach for almost everything in NLP.
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Open_in_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
 ---
 
-## Bidirectional attention
+<p align="center">
+  <img src="architecture.png" alt="Architecture" width="90%"/>
+</p>
 
-Here's the difference from GPT:
+---
+
+## 💡 The Idea
+
+BERT changed how we think about NLP. Instead of training a model for each task, you pretrain once on tons of text, then fine-tune for anything.
+
+> *The key insight: let the model see **both directions**.*
 
 ```
-GPT reads:   "The cat sat on the ___"  → only sees left
-BERT reads:  "The cat sat on the ___"  → sees left AND right
+GPT:   "The cat sat on the ___"  → only sees left
+BERT:  "The cat sat on the ___"  → sees left AND right
 ```
-
-BERT can use "mat." at the end to help fill in "the ___" - GPT can't.
-
-This makes BERT great for understanding tasks but useless for generation (it would cheat by looking ahead).
 
 ---
 
-## How it trains
+## 🏗️ Architecture
 
-Two pretraining objectives:
+```
+[CLS] Token₁ Token₂ ... Token_N [SEP]
+              ↓
+Token + Segment + Position Embeddings
+              ↓
+    Transformer Encoder × 12
+              ↓
+[CLS] → Classification | Tokens → NER/QA
+```
 
-**1. Masked Language Modeling (MLM)**
+---
 
-Randomly mask 15% of tokens, predict them:
-- 80% replaced with [MASK]
-- 10% replaced with random word
-- 10% unchanged
+## 🎯 Pre-training
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎭 Masked Language Model (MLM)
+
+Mask 15% of tokens, predict them:
+- 80% → `[MASK]`
+- 10% → random word
+- 10% → unchanged
 
 ```
 Input:  "The [MASK] sat on the mat"
 Target: "cat"
 ```
 
-The random/unchanged tokens prevent the model from only paying attention to [MASK].
+</td>
+<td width="50%" valign="top">
 
-**2. Next Sentence Prediction (NSP)**
+### 🔗 Next Sentence Prediction (NSP)
 
-Given two sentences, predict if B follows A. Turns out this doesn't help much - later models (RoBERTa) dropped it.
+Predict if sentence B follows A:
+
+```
+[CLS] Sentence A [SEP] Sentence B [SEP]
+                  ↓
+          IsNext / NotNext
+```
+
+*(Later dropped in RoBERTa)*
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Architecture
-
-BERT is just the encoder half of the original transformer:
-
-```
-[CLS] + Tokens + [SEP]
-        ↓
-Token + Segment + Position embeddings
-        ↓
-Transformer Encoder × 12 (or 24)
-        ↓
-[CLS] → classification
-Tokens → token-level tasks
-```
-
-No decoder. No causal mask. Every token sees every other token.
-
----
-
-## Model sizes
+## 📊 Model Sizes
 
 | Model | Layers | Hidden | Heads | Params |
-|-------|--------|--------|-------|--------|
-| BERT-base | 12 | 768 | 12 | 110M |
-| BERT-large | 24 | 1024 | 16 | 340M |
+|-------|:------:|:------:|:-----:|:------:|
+| BERT-base | 12 | 768 | 12 | **110M** |
+| BERT-large | 24 | 1024 | 16 | **340M** |
 
 ---
 
-## What BERT is good at
+## ✅ Best For
 
-Works great:
-- Text classification (spam, sentiment, topic)
-- Named Entity Recognition
-- Question answering (extractive - find the answer in context)
-- Semantic similarity
-- Sentence embeddings
-
-Doesn't work:
-- Text generation (use GPT)
-- Translation (use encoder-decoder)
-- Anything where you need to produce text
+| ✅ Good | ❌ Not For |
+|---------|-----------|
+| Text classification | Text generation |
+| Named Entity Recognition | Translation |
+| Question answering | Chatbots |
+| Sentiment analysis | |
+| Embeddings | |
 
 ---
 
-## The BERT family
+## 👨‍👩‍👧‍👦 The BERT Family
 
-BERT spawned a bunch of variants:
+| Model | Year | What's Different |
+|-------|:----:|------------------|
+| **RoBERTa** | 2019 | More data, no NSP |
+| **ALBERT** | 2019 | Parameter sharing |
+| **DistilBERT** | 2019 | 40% smaller, 97% performance |
+| **DeBERTa** | 2020 | Disentangled attention ⭐ |
 
-| Model | What's different |
-|-------|------------------|
-| RoBERTa | More data, no NSP, dynamic masking |
-| ALBERT | Parameter sharing, smaller |
-| DistilBERT | Distillation, 40% smaller, 97% performance |
-| DeBERTa | Disentangled attention, currently best encoder |
-
-If I were starting a project today, I'd use DeBERTa or a fine-tuned BERT variant from HuggingFace.
+> 💡 *Today, I'd use DeBERTa for encoder tasks*
 
 ---
 
-## Code
-
-BERT attention is vanilla self-attention without a causal mask:
+## 💻 Code
 
 ```python
+# BERT: No causal mask - all tokens see all tokens
 class BertAttention(nn.Module):
     def forward(self, x):
-        Q = self.W_q(x)
-        K = self.W_k(x)
-        V = self.W_v(x)
-        
-        # No mask - all tokens see all tokens
-        attn = softmax(Q @ K.T / sqrt(d_k))
+        Q, K, V = self.W_q(x), self.W_k(x), self.W_v(x)
+        attn = softmax(Q @ K.T / sqrt(d_k))  # No mask!
         return attn @ V
-```
 
-The MLM loss only computes on masked positions:
-
-```python
+# MLM loss: only on masked positions
 def mlm_loss(logits, labels, mask):
-    masked_logits = logits[mask]
-    masked_labels = labels[mask]
-    return cross_entropy(masked_logits, masked_labels)
+    return cross_entropy(logits[mask], labels[mask])
 ```
 
 ---
 
-## Papers
+## 📚 Papers
 
-- [BERT](https://arxiv.org/abs/1810.04805) (2018) - Original
-- [RoBERTa](https://arxiv.org/abs/1907.11692) (2019) - Better training recipe
-- [DeBERTa](https://arxiv.org/abs/2006.03654) (2020) - Current state of the art
+| Paper | Year |
+|-------|:----:|
+| [BERT](https://arxiv.org/abs/1810.04805) | 2018 |
+| [RoBERTa](https://arxiv.org/abs/1907.11692) | 2019 |
+| [DeBERTa](https://arxiv.org/abs/2006.03654) | 2020 |
 
 ---
 
-## Try it
+<p align="center">
+  <a href="https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb">
+    <img src="https://img.shields.io/badge/▶_Train_It_Yourself-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white" alt="Open In Colab"/>
+  </a>
+</p>
 
-The notebook implements BERT from scratch, shows the MLM pretraining, and visualizes the bidirectional attention.
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb)
+<p align="center">
+  <sub>Build BERT from scratch • MLM pretraining • Visualize bidirectional attention</sub>
+</p>
