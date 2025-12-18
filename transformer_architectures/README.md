@@ -4,242 +4,247 @@
   <img src="banner.png" alt="Transformer Architectures" width="100%"/>
 </p>
 
-Ever tried to understand how BERT differs from GPT? Or why Longformer can handle 16K tokens while vanilla attention dies at 4K?
+<p align="center">
+  <strong>10 transformer variants, from scratch, with training code you can run in 2 minutes.</strong>
+</p>
 
-This is my attempt to implement 10 transformer variants from scratch, train them on tiny datasets, and actually *see* how they work.
-
----
-
-## What's Here
-
-Each folder has:
-- A **diagram** showing the architecture
-- **PyTorch code** you can actually read (no 500-line base classes)
-- A **Colab notebook** that trains on a tiny dataset in ~2 minutes
-- Visualizations of attention patterns
-
-The goal: understand *why* each architecture exists, not just *what* it does.
+<p align="center">
+  <a href="#the-classics">Classics</a> •
+  <a href="#efficient-attention">Efficient</a> •
+  <a href="#scaling">Scaling</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#papers">Papers</a>
+</p>
 
 ---
 
-## The Architectures
+## At a Glance
 
-### The Classics
-
-| | Architecture | What It Does | Try It |
-|--|--------------|--------------|--------|
-| 01 | [Vanilla Transformer](./01_vanilla_transformer/) | The OG. Encoder-decoder with self-attention. Still the foundation of everything. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb) |
-| 02 | [BERT](./02_bert/) | Encoder-only. Looks at text bidirectionally. Great for understanding, bad for generating. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb) |
-| 03 | [GPT](./03_gpt/) | Decoder-only. Predicts next token. The architecture behind ChatGPT, Claude, etc. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb) |
-| 04 | [Vision Transformer](./04_vision_transformer/) | Treats image patches like words. Surprisingly simple and it works. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/04_vision_transformer/demo.ipynb) |
-
-### The Long-Context Ones
-
-Standard attention is O(N²). Double your sequence, quadruple your compute. These architectures fix that:
-
-| | Architecture | The Trick | Complexity | Try It |
-|--|--------------|-----------|------------|--------|
-| 05 | [Transformer-XL](./05_transformer_xl/) | Cache hidden states across segments | O(N²) per segment | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb) |
-| 06 | [Sparse Transformer](./06_sparse_transformer/) | Only attend to some tokens (local + strided) | O(N√N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb) |
-| 07 | [Performer](./07_performer/) | Approximate softmax with random features | O(N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb) |
-| 08 | [Reformer](./08_reformer/) | LSH to find similar queries, reversible layers | O(N log N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb) |
-| 09 | [Longformer](./09_longformer/) | Sliding window + global tokens for [CLS] | O(N) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb) |
-
-### The Scaling One
-
-| | Architecture | The Trick | Try It |
-|--|--------------|-----------|--------|
-| 10 | [Switch Transformer](./10_switch_transformer/) | MoE: route each token to 1 of N experts. Trillion params, same FLOPs. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb) |
+| # | Architecture | Type | Complexity | Best For | Demo |
+|:-:|--------------|------|:----------:|----------|:----:|
+| 01 | [**Vanilla Transformer**](./01_vanilla_transformer/) | Enc-Dec | O(N²) | Foundation | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb) |
+| 02 | [**BERT**](./02_bert/) | Encoder | O(N²) | Understanding | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb) |
+| 03 | [**GPT**](./03_gpt/) | Decoder | O(N²) | Generation | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb) |
+| 04 | [**Vision Transformer**](./04_vision_transformer/) | Encoder | O(N²) | Images | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/04_vision_transformer/demo.ipynb) |
+| 05 | [**Transformer-XL**](./05_transformer_xl/) | Decoder | O(N²)/seg | Long context | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb) |
+| 06 | [**Sparse Transformer**](./06_sparse_transformer/) | Any | O(N√N) | Very long | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb) |
+| 07 | [**Performer**](./07_performer/) | Any | O(N) | Linear attention | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb) |
+| 08 | [**Reformer**](./08_reformer/) | Any | O(N log N) | Memory efficient | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb) |
+| 09 | [**Longformer**](./09_longformer/) | Encoder | O(N) | Documents | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb) |
+| 10 | [**Switch Transformer**](./10_switch_transformer/) | Any | O(N²) | Trillion scale | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb) |
 
 ---
 
-## How They Evolved (2017-2025)
+<h2 id="the-classics">🏛️ The Classics (Foundation)</h2>
 
-```
-2017: Vanilla Transformer ("Attention Is All You Need")
-      │
-      ├── Encoder-only ─────────────────────────────────────────────────────────
-      │   └── BERT (2018) → RoBERTa → ALBERT → DeBERTa (2020)
-      │         └── Vision Transformer (2020) → DeiT → Swin → ViT-22B
-      │
-      ├── Decoder-only (The LLM Era) ───────────────────────────────────────────
-      │   └── GPT (2018) → GPT-2 (2019) → GPT-3 (2020)
-      │         │
-      │         ├── 2022: ChatGPT, InstructGPT
-      │         ├── 2023: GPT-4, LLaMA, LLaMA-2, Mistral-7B, Phi-1.5
-      │         ├── 2024: LLaMA-3, Mistral Large, Mixtral 8x22B, Phi-3, Qwen-2
-      │         └── 2025: DeepSeek-V3, LLaMA-3.3, Qwen-2.5
-      │
-      ├── Efficient Attention ──────────────────────────────────────────────────
-      │   ├── Sparse/Longformer (2020) - sparse patterns
-      │   ├── FlashAttention (2022) - IO-aware exact attention
-      │   ├── FlashAttention-2 (2023) - 2x faster
-      │   ├── Ring Attention (2023) - distributed long context
-      │   └── FlashAttention-3 (2024) - Hopper GPUs
-      │
-      ├── MoE (Mixture of Experts) ─────────────────────────────────────────────
-      │   ├── Switch Transformer (2021) - top-1 routing
-      │   ├── Mixtral 8x7B (2023) - open MoE that works
-      │   ├── Mixtral 8x22B (2024)
-      │   └── DeepSeek-MoE (2024) - fine-grained experts
-      │
-      └── Post-Transformer / Alternatives ──────────────────────────────────────
-          ├── RWKV (2023) - linear attention RNN
-          ├── Mamba (2023) - State Space Models
-          ├── RetNet (2023) - retention mechanism
-          ├── Mamba-2 (2024) - structured state space duality
-          └── Jamba (2024) - Mamba + Transformer hybrid
-```
+These are the architectures you need to understand first.
+
+### [01. Vanilla Transformer](./01_vanilla_transformer/)
+> The 2017 paper that started it all: "Attention Is All You Need"
+
+- **Architecture**: Encoder-Decoder with self-attention
+- **Key equation**: `Attention(Q,K,V) = softmax(QK^T/√d)V`
+- **Used in**: Machine translation, seq2seq tasks
+
+### [02. BERT](./02_bert/)
+> Encoder-only. Bidirectional. Great for understanding text.
+
+- **Key insight**: Mask 15% of tokens, predict them (MLM)
+- **Sees**: Both left AND right context
+- **Used in**: Classification, NER, QA, embeddings
+
+### [03. GPT](./03_gpt/)
+> Decoder-only. The architecture behind ChatGPT, Claude, LLaMA.
+
+- **Key insight**: Just predict the next token. Scale it up.
+- **Sees**: Only left context (causal mask)
+- **Used in**: Text generation, chatbots, code completion
+
+### [04. Vision Transformer](./04_vision_transformer/)
+> "An image is worth 16x16 words"
+
+- **Key insight**: Split image into patches, treat as tokens
+- **224×224 image** → 196 patches → transformer → classification
+- **Used in**: Image classification, object detection
 
 ---
 
-## Quick Comparison
+<h2 id="efficient-attention">⚡ Efficient Attention (Breaking O(N²))</h2>
 
-What to use in 2025:
+Standard attention is O(N²). These architectures fix that.
 
-| Need | Use | Why |
-|------|-----|-----|
-| Text classification | BERT / DeBERTa | Still great for NLU tasks |
-| Text generation (small) | Phi-3, Mistral 7B | Best quality per parameter |
-| Text generation (large) | LLaMA-3.1, Qwen-2.5 | Open, good performance |
-| Coding | DeepSeek-Coder, Qwen-Coder | Specialized training |
-| Long context (128K+) | LLaMA-3.1, Qwen-2.5 | Native long context + RoPE |
-| Very long (1M+) | Ring Attention + any model | Distributed context |
-| Images | ViT, Swin, DINOv2 | Depends on task |
-| Multimodal | LLaVA, Qwen-VL | Vision + Language |
-| MoE (efficiency) | Mixtral, DeepSeek-V3 | More params, same FLOPs |
-| Non-attention | Mamba, RWKV | Linear complexity, good for long sequences |
+### [05. Transformer-XL](./05_transformer_xl/)
+> Segment-level recurrence for longer context
 
-### Model Size Reality Check (2025)
+- **Problem**: Fixed context window
+- **Solution**: Cache hidden states from previous segments
+- **Complexity**: O(N²) per segment, but extended context
 
-| Model | Size | Context | Training Cost | Open? |
-|-------|------|---------|---------------|-------|
-| Phi-3-mini | 3.8B | 128K | ~$1M | Yes |
-| Mistral 7B | 7B | 32K | ~$2M | Yes |
-| LLaMA-3.1-8B | 8B | 128K | Part of $100M+ | Yes |
-| Mixtral 8x7B | 46B (12B active) | 32K | ~$10M | Yes |
-| LLaMA-3.1-70B | 70B | 128K | Part of $100M+ | Yes |
-| DeepSeek-V3 | 671B (37B active) | 128K | $5.5M | Yes |
-| LLaMA-3.1-405B | 405B | 128K | Part of $100M+ | Yes |
-| GPT-4 | ~1.8T (rumored MoE) | 128K | ~$100M | No |
+### [06. Sparse Transformer](./06_sparse_transformer/)
+> Only attend to some tokens
+
+- **Pattern**: Local window + strided (every k-th token)
+- **Complexity**: O(N√N) instead of O(N²)
+- **Used in**: GPT-3's sparse attention layers
+
+### [07. Performer](./07_performer/)
+> True linear attention via random features
+
+- **Trick**: Approximate softmax with `φ(Q)(φ(K)^T V)`
+- **Complexity**: O(N) — compute K^T V first!
+- **Trade-off**: Approximation (not exact attention)
+
+### [08. Reformer](./08_reformer/)
+> LSH attention + reversible layers
+
+- **LSH**: Hash similar queries into buckets, attend within buckets
+- **Reversible**: Recompute activations during backprop (save memory)
+- **Complexity**: O(N log N)
+
+### [09. Longformer](./09_longformer/)
+> Sliding window + global attention for special tokens
+
+- **Local**: Each token attends to window of nearby tokens
+- **Global**: [CLS] and question tokens see everything
+- **Complexity**: O(N × window_size)
+- **Used in**: Long document QA, summarization
 
 ---
 
-## Get Started
+<h2 id="scaling">🚀 Scaling (More Parameters, Same FLOPs)</h2>
 
-Easiest way: click a Colab badge above and run. Everything installs in the notebook.
+### [10. Switch Transformer](./10_switch_transformer/)
+> Mixture of Experts: trillion parameters, constant compute
 
-Or locally:
+- **Idea**: Route each token to 1 of N expert FFNs
+- **Result**: N× more parameters, same FLOPs per token
+- **Scale**: Switch-C has 1.6T parameters!
+- **Descendants**: Mixtral, DeepSeek-V3
 
+---
+
+<h2 id="quick-start">🚀 Quick Start</h2>
+
+**Fastest way**: Click any Colab badge above. Everything installs automatically.
+
+**Local setup**:
 ```bash
 git clone https://github.com/gaurav-redhat/transformer_problems.git
 cd transformer_problems/transformer_architectures
 pip install torch matplotlib numpy
+jupyter notebook
+```
 
-# Then open any notebook
-jupyter notebook 01_vanilla_transformer/demo.ipynb
+**Learning path**:
+
+| Level | Start Here |
+|-------|------------|
+| **Beginner** | [Vanilla Transformer](./01_vanilla_transformer/) → [GPT](./03_gpt/) → [BERT](./02_bert/) |
+| **Intermediate** | [ViT](./04_vision_transformer/) → [Longformer](./09_longformer/) |
+| **Advanced** | [Performer](./07_performer/) → [Switch Transformer](./10_switch_transformer/) |
+
+---
+
+## 📊 Evolution Timeline
+
+```
+2017 ─── Vanilla Transformer
+          │
+2018 ─────┼── BERT (encoder)
+          └── GPT (decoder)
+          
+2019 ─────┼── Transformer-XL (memory)
+          └── Sparse Transformer (O(N√N))
+          
+2020 ─────┼── GPT-3 (175B)
+          ├── ViT (images)
+          ├── Longformer (documents)
+          ├── Performer (O(N))
+          └── Reformer (LSH)
+          
+2021 ─────┼── Switch Transformer (MoE)
+          └── RoPE (position encoding)
+          
+2022 ─────┼── ChatGPT
+          └── FlashAttention (IO-aware)
+          
+2023 ─────┼── LLaMA, Mistral, Mixtral
+          ├── Mamba (no attention!)
+          └── FlashAttention-2
+          
+2024 ─────┼── LLaMA-3, Qwen-2, Phi-3
+          ├── DeepSeek-V3 ($5.5M training!)
+          └── FlashAttention-3
 ```
 
 ---
 
-## Where to Start
+## 🔧 What to Use in 2025
 
-**New to transformers?**
-1. [Vanilla Transformer](./01_vanilla_transformer/) - the foundation
-2. [GPT](./03_gpt/) - see autoregressive generation in action
-3. [BERT](./02_bert/) - understand bidirectional attention
-
-**Want to handle long sequences?**
-- Start with [Longformer](./09_longformer/) - understand the concept
-- In production: use models with native long context (LLaMA-3.1, Qwen-2.5)
-- For 1M+ tokens: look into Ring Attention or Mamba
-
-**Building something big?**
-- [Switch Transformer](./10_switch_transformer/) - understand MoE
-- In production: Mixtral 8x7B or DeepSeek-V3 for efficiency
-
-**Want to stay current?**
-- Follow: [@kaborka](https://x.com/kaborka), [@_akhaliq](https://x.com/_akhaliq), [@ylaboratory](https://x.com/ylaboratory)
-- Read: [The Transformer Family V2](https://lilianweng.github.io/posts/2023-01-27-the-transformer-family-v2/) by Lilian Weng
+| Task | Recommended |
+|------|-------------|
+| Classification | BERT, DeBERTa |
+| Generation (small) | Phi-3, Mistral 7B |
+| Generation (large) | LLaMA-3.1, Qwen-2.5 |
+| Long documents | Longformer, or native long-context models |
+| Images | ViT, Swin, DINOv2 |
+| Efficiency at scale | Mixtral, DeepSeek-V3 (MoE) |
+| Non-attention | Mamba, RWKV |
 
 ---
 
-## Papers & Code (2017-2025)
+<h2 id="papers">📚 Key Papers</h2>
 
-### The Foundations (2017-2020)
+<details>
+<summary><strong>Foundations (2017-2020)</strong></summary>
 
-| Year | Paper | What It Did | Code |
-|------|-------|-------------|------|
-| 2017 | [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | Started everything | [tensor2tensor](https://github.com/tensorflow/tensor2tensor) |
-| 2018 | [BERT](https://arxiv.org/abs/1810.04805) | Bidirectional pretraining | [google-research/bert](https://github.com/google-research/bert) |
-| 2018 | [GPT](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) | Decoder-only pretraining | [openai/finetune-transformer-lm](https://github.com/openai/finetune-transformer-lm) |
-| 2019 | [GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | Scaled up, emergent abilities | [openai/gpt-2](https://github.com/openai/gpt-2) |
-| 2019 | [Transformer-XL](https://arxiv.org/abs/1901.02860) | Segment-level recurrence | [kimiyoung/transformer-xl](https://github.com/kimiyoung/transformer-xl) |
-| 2019 | [Sparse Transformers](https://arxiv.org/abs/1904.10509) | Sparse attention patterns | [openai/sparse_attention](https://github.com/openai/sparse_attention) |
-| 2020 | [Reformer](https://arxiv.org/abs/2001.04451) | LSH attention | [google/trax](https://github.com/google/trax) |
-| 2020 | [Longformer](https://arxiv.org/abs/2004.05150) | Sliding window + global | [allenai/longformer](https://github.com/allenai/longformer) |
-| 2020 | [Performer](https://arxiv.org/abs/2009.14794) | FAVOR+ linear attention | [google-research/performer](https://github.com/google-research/google-research/tree/master/performer) |
-| 2020 | [GPT-3](https://arxiv.org/abs/2005.14165) | 175B params, few-shot learning | Closed |
-| 2020 | [ViT](https://arxiv.org/abs/2010.11929) | Images as patches | [google-research/vision_transformer](https://github.com/google-research/vision_transformer) |
+| Paper | Year | Innovation |
+|-------|------|------------|
+| [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | 2017 | Transformer |
+| [BERT](https://arxiv.org/abs/1810.04805) | 2018 | Bidirectional pretraining |
+| [GPT-2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | 2019 | Scaled LM |
+| [Transformer-XL](https://arxiv.org/abs/1901.02860) | 2019 | Segment recurrence |
+| [Sparse Transformers](https://arxiv.org/abs/1904.10509) | 2019 | O(N√N) |
+| [Longformer](https://arxiv.org/abs/2004.05150) | 2020 | Sliding window |
+| [Performer](https://arxiv.org/abs/2009.14794) | 2020 | FAVOR+ |
+| [ViT](https://arxiv.org/abs/2010.11929) | 2020 | Image patches |
+</details>
 
-### The LLM Era (2021-2022)
+<details>
+<summary><strong>LLM Era (2021-2023)</strong></summary>
 
-| Year | Paper | What It Did | Code |
-|------|-------|-------------|------|
-| 2021 | [Switch Transformer](https://arxiv.org/abs/2101.03961) | MoE with top-1 routing | [google/flaxformer](https://github.com/google/flaxformer) |
-| 2021 | [RoPE](https://arxiv.org/abs/2104.09864) | Rotary position embeddings | Used in LLaMA, Mistral |
-| 2022 | [InstructGPT](https://arxiv.org/abs/2203.02155) | RLHF for alignment | Closed |
-| 2022 | [FlashAttention](https://arxiv.org/abs/2205.14135) | IO-aware exact attention | [Dao-AILab/flash-attention](https://github.com/Dao-AILab/flash-attention) |
-| 2022 | [Chinchilla](https://arxiv.org/abs/2203.15556) | Compute-optimal scaling | Closed |
-| 2022 | [PaLM](https://arxiv.org/abs/2204.02311) | 540B params, pathways | Closed |
+| Paper | Year | Innovation |
+|-------|------|------------|
+| [Switch Transformer](https://arxiv.org/abs/2101.03961) | 2021 | MoE top-1 |
+| [RoPE](https://arxiv.org/abs/2104.09864) | 2021 | Rotary PE |
+| [FlashAttention](https://arxiv.org/abs/2205.14135) | 2022 | IO-aware |
+| [LLaMA](https://arxiv.org/abs/2302.13971) | 2023 | Open LLM |
+| [Mistral 7B](https://arxiv.org/abs/2310.06825) | 2023 | GQA + SWA |
+| [Mamba](https://arxiv.org/abs/2312.00752) | 2023 | SSM |
+</details>
 
-### Open Source Revolution (2023)
+<details>
+<summary><strong>Current (2024-2025)</strong></summary>
 
-| Year | Paper | What It Did | Code |
-|------|-------|-------------|------|
-| 2023 | [LLaMA](https://arxiv.org/abs/2302.13971) | Open 7B-65B models | [facebookresearch/llama](https://github.com/facebookresearch/llama) |
-| 2023 | [LLaMA-2](https://arxiv.org/abs/2307.09288) | Improved + chat versions | [meta-llama/llama](https://github.com/meta-llama/llama) |
-| 2023 | [FlashAttention-2](https://arxiv.org/abs/2307.08691) | 2x faster, better parallelism | [Dao-AILab/flash-attention](https://github.com/Dao-AILab/flash-attention) |
-| 2023 | [Mistral 7B](https://arxiv.org/abs/2310.06825) | Best 7B model, GQA + sliding window | [mistralai/mistral-src](https://github.com/mistralai/mistral-src) |
-| 2023 | [Mixtral 8x7B](https://arxiv.org/abs/2401.04088) | Open MoE, beats LLaMA-2 70B | [mistralai/mistral-src](https://github.com/mistralai/mistral-src) |
-| 2023 | [Phi-1.5](https://arxiv.org/abs/2309.05463) | "Textbooks are all you need" | [microsoft/phi-1_5](https://huggingface.co/microsoft/phi-1_5) |
-| 2023 | [Ring Attention](https://arxiv.org/abs/2310.01889) | Distributed million-token context | [lhao499/RingAttention](https://github.com/lhao499/RingAttention) |
-| 2023 | [Mamba](https://arxiv.org/abs/2312.00752) | State Space Models, no attention | [state-spaces/mamba](https://github.com/state-spaces/mamba) |
-| 2023 | [RWKV](https://arxiv.org/abs/2305.13048) | Linear attention RNN | [BlinkDL/RWKV-LM](https://github.com/BlinkDL/RWKV-LM) |
-| 2023 | [RetNet](https://arxiv.org/abs/2307.08621) | Retention mechanism | [microsoft/torchscale](https://github.com/microsoft/torchscale) |
+| Paper | Year | Innovation |
+|-------|------|------------|
+| [LLaMA-3](https://ai.meta.com/blog/meta-llama-3/) | 2024 | 15T tokens |
+| [Phi-3](https://arxiv.org/abs/2404.14219) | 2024 | Small & mighty |
+| [DeepSeek-V3](https://arxiv.org/abs/2412.19437) | 2024 | 671B MoE, $5.5M |
+| [FlashAttention-3](https://arxiv.org/abs/2407.08608) | 2024 | Hopper GPUs |
+</details>
 
-### Scaling & Efficiency (2024)
+<details>
+<summary><strong>Key Techniques</strong></summary>
 
-| Year | Paper | What It Did | Code |
-|------|-------|-------------|------|
-| 2024 | [LLaMA-3](https://ai.meta.com/blog/meta-llama-3/) | 8B/70B, 15T tokens | [meta-llama/llama3](https://github.com/meta-llama/llama3) |
-| 2024 | [Mixtral 8x22B](https://mistral.ai/news/mixtral-8x22b/) | Larger MoE | [HuggingFace](https://huggingface.co/mistralai/Mixtral-8x22B-v0.1) |
-| 2024 | [Phi-3](https://arxiv.org/abs/2404.14219) | 3.8B beats Mixtral 8x7B | [microsoft/Phi-3-mini](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct) |
-| 2024 | [Qwen-2](https://arxiv.org/abs/2407.10671) | Alibaba's best open model | [QwenLM/Qwen2](https://github.com/QwenLM/Qwen2) |
-| 2024 | [Mamba-2](https://arxiv.org/abs/2405.21060) | Structured state space duality | [state-spaces/mamba](https://github.com/state-spaces/mamba) |
-| 2024 | [FlashAttention-3](https://arxiv.org/abs/2407.08608) | Hopper GPU optimizations | [Dao-AILab/flash-attention](https://github.com/Dao-AILab/flash-attention) |
-| 2024 | [DeepSeek-V2](https://arxiv.org/abs/2405.04434) | MLA + DeepSeekMoE | [deepseek-ai/DeepSeek-V2](https://github.com/deepseek-ai/DeepSeek-V2) |
-| 2024 | [Jamba](https://arxiv.org/abs/2403.19887) | Mamba + Transformer hybrid | [ai21labs/Jamba](https://huggingface.co/ai21labs/Jamba-v0.1) |
-
-### Latest (2024-2025)
-
-| Year | Paper | What It Did | Code |
-|------|-------|-------------|------|
-| 2024 | [LLaMA-3.1](https://ai.meta.com/blog/meta-llama-3-1/) | 405B, 128K context | [meta-llama/llama-models](https://github.com/meta-llama/llama-models) |
-| 2024 | [Qwen-2.5](https://qwenlm.github.io/blog/qwen2.5/) | 72B rivals GPT-4 | [QwenLM/Qwen2.5](https://github.com/QwenLM/Qwen2.5) |
-| 2024 | [DeepSeek-V3](https://arxiv.org/abs/2412.19437) | 671B MoE, $5.5M training | [deepseek-ai/DeepSeek-V3](https://github.com/deepseek-ai/DeepSeek-V3) |
-| 2024 | [LLaMA-3.3](https://ai.meta.com/blog/llama-3-3/) | 70B matches 405B quality | [meta-llama/llama-models](https://github.com/meta-llama/llama-models) |
-
-### Key Techniques to Know
-
-| Technique | Paper | Why It Matters |
-|-----------|-------|----------------|
-| RoPE | [Su et al. 2021](https://arxiv.org/abs/2104.09864) | Position encoding that extrapolates to longer sequences |
-| GQA | [Ainslie et al. 2023](https://arxiv.org/abs/2305.13245) | Grouped-query attention: balance between MHA and MQA |
-| SwiGLU | [Shazeer 2020](https://arxiv.org/abs/2002.05202) | Better FFN activation (used in LLaMA) |
-| ALiBi | [Press et al. 2022](https://arxiv.org/abs/2108.12409) | No position embeddings, just attention bias |
-| KV Cache | - | Caching keys/values for fast autoregressive generation |
-| Speculative Decoding | [Leviathan et al. 2023](https://arxiv.org/abs/2211.17192) | Draft model + verify for 2-3x speedup |
+| Technique | Why It Matters |
+|-----------|----------------|
+| **RoPE** | Position encoding that extrapolates |
+| **GQA** | Balance between MHA and MQA |
+| **SwiGLU** | Better FFN activation |
+| **FlashAttention** | Fast exact attention |
+| **KV Cache** | Fast autoregressive generation |
+</details>
 
 ---
 
@@ -249,4 +254,4 @@ Found a bug? Have a cleaner implementation? PRs welcome.
 
 ## License
 
-MIT - do whatever you want with it.
+MIT
