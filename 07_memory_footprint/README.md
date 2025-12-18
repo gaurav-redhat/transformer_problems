@@ -1,23 +1,68 @@
 # Problem 7: High Memory Footprint
 
-## Problem
+[← Back to Main](../README.md) | [← Previous](../06_data_hungry/README.md) | [Next →](../08_compute_cost/README.md)
 
-Q, K, V tensors and KV cache consume large memory. GPU OOM errors common.
+---
 
-The attention mechanism requires storing Query, Key, and Value matrices for all layers. During inference, the KV cache grows linearly with sequence length, often causing out-of-memory errors on GPUs.
+![Problem 7](./problem.png)
 
-## Solutions
+## What's the Problem?
 
-| Solution | Description |
-|----------|-------------|
-| **FlashAttention** | Tiled attention computation that minimizes memory transfers |
-| **KV Cache Optimization** | Techniques like PagedAttention, grouped-query attention |
-| **Gradient Checkpointing** | Trade compute for memory by recomputing activations |
-| **Memory-Efficient Attention** | Various implementations that reduce peak memory usage |
+Ever seen "CUDA out of memory" when running a transformer? Welcome to the club.
 
-## References
+Here's what's eating your GPU memory:
+- Model weights (billions of parameters × 2-4 bytes each)
+- Activations (saved for backprop)
+- The attention matrix (N² elements per layer per head)
+- KV cache during inference (grows with sequence length)
 
-- [FlashAttention](https://arxiv.org/abs/2205.14135) - Fast and Memory-Efficient Exact Attention
-- [PagedAttention (vLLM)](https://arxiv.org/abs/2309.06180) - Efficient Memory Management for LLM Serving
-- [Gradient Checkpointing](https://arxiv.org/abs/1604.06174) - Training Deep Nets with Sublinear Memory Cost
+A 7B parameter model needs ~14GB just for weights in fp16. Add activations and attention matrices during training, and you're looking at 40-80GB easily.
 
+## The KV Cache Problem
+
+During inference, the KV cache grows linearly with sequence length:
+```
+KV cache size = 2 × layers × heads × d_head × seq_len × batch_size
+```
+
+For a 70B model with 128K context? That's ~40GB just for the KV cache. Per request.
+
+## Why This Matters
+
+- **Training**: Limits batch size, which hurts convergence
+- **Inference**: Limits concurrent users, increases cost
+- **Edge deployment**: Forget about it
+
+## How Do We Fix It?
+
+| Approach | What It Does |
+|----------|--------------|
+| **FlashAttention** | Computes attention without materializing the full N² matrix |
+| **Gradient Checkpointing** | Don't save all activations — recompute them during backward pass |
+| **PagedAttention** | Manage KV cache like virtual memory (used in vLLM) |
+| **GQA/MQA** | Share KV heads across query heads — smaller cache |
+| **Quantization** | 4-bit weights use 4x less memory than 16-bit |
+
+## FlashAttention: The Game Changer
+
+Traditional attention:
+1. Compute QK^T (N² matrix)
+2. Store it
+3. Apply softmax
+4. Multiply by V
+
+FlashAttention:
+1. Process in tiles that fit in SRAM
+2. Never materialize full N² matrix in HBM
+3. Same exact result, fraction of the memory
+
+This is now the default in most frameworks.
+
+## Learn More
+
+- [FlashAttention](https://arxiv.org/abs/2205.14135) — The paper
+- [vLLM](https://arxiv.org/abs/2309.06180) — PagedAttention for serving
+
+---
+
+[← Back to Main](../README.md) | [← Previous](../06_data_hungry/README.md) | [Next →](../08_compute_cost/README.md)
