@@ -2,6 +2,8 @@
 
 [← Back to Main](../README.md) | [← Previous](../09_length_generalization/README.md) | [Next →](../11_attention_smoothing/README.md)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/10_training_instability/demo.ipynb)
+
 ---
 
 ![Problem 10](./problem.png)
