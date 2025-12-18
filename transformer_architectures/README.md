@@ -4,7 +4,7 @@
   <img src="banner.png" alt="Transformer Architectures" width="100%"/>
 </p>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/01_vanilla_transformer/demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb)
 
 ## 📚 Overview
 
@@ -57,16 +57,16 @@ This repository contains implementations, explanations, and training code for **
 
 | # | Architecture | Type | Attention | Key Innovation | Colab |
 |---|--------------|------|-----------|----------------|-------|
-| 01 | [Vanilla Transformer](./01_vanilla_transformer/) | Encoder-Decoder | O(N²) | Self-attention mechanism | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/01_vanilla_transformer/demo.ipynb) |
-| 02 | [BERT](./02_bert/) | Encoder | O(N²) | Bidirectional, MLM pretraining | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/02_bert/demo.ipynb) |
-| 03 | [GPT](./03_gpt/) | Decoder | O(N²) | Autoregressive, causal mask | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/03_gpt/demo.ipynb) |
-| 04 | [Vision Transformer](./04_vision_transformer/) | Encoder | O(N²) | Patches as tokens for images | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/04_vision_transformer/demo.ipynb) |
-| 05 | [Transformer-XL](./05_transformer_xl/) | Decoder | O(N²) | Segment-level recurrence | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/05_transformer_xl/demo.ipynb) |
-| 06 | [Sparse Transformer](./06_sparse_transformer/) | Any | O(N√N) | Sparse attention patterns | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/06_sparse_transformer/demo.ipynb) |
-| 07 | [Performer](./07_performer/) | Any | O(N) | FAVOR+ random features | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/07_performer/demo.ipynb) |
-| 08 | [Reformer](./08_reformer/) | Any | O(N log N) | LSH attention, reversible | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/08_reformer/demo.ipynb) |
-| 09 | [Longformer](./09_longformer/) | Encoder | O(N) | Local + global attention | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/09_longformer/demo.ipynb) |
-| 10 | [Switch Transformer](./10_switch_transformer/) | Any | O(N²) | Mixture of Experts (MoE) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/transformer/transformer_architectures/10_switch_transformer/demo.ipynb) |
+| 01 | [Vanilla Transformer](./01_vanilla_transformer/) | Encoder-Decoder | O(N²) | Self-attention mechanism | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb) |
+| 02 | [BERT](./02_bert/) | Encoder | O(N²) | Bidirectional, MLM pretraining | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb) |
+| 03 | [GPT](./03_gpt/) | Decoder | O(N²) | Autoregressive, causal mask | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb) |
+| 04 | [Vision Transformer](./04_vision_transformer/) | Encoder | O(N²) | Patches as tokens for images | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/04_vision_transformer/demo.ipynb) |
+| 05 | [Transformer-XL](./05_transformer_xl/) | Decoder | O(N²) | Segment-level recurrence | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb) |
+| 06 | [Sparse Transformer](./06_sparse_transformer/) | Any | O(N√N) | Sparse attention patterns | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb) |
+| 07 | [Performer](./07_performer/) | Any | O(N) | FAVOR+ random features | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb) |
+| 08 | [Reformer](./08_reformer/) | Any | O(N log N) | LSH attention, reversible | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb) |
+| 09 | [Longformer](./09_longformer/) | Encoder | O(N) | Local + global attention | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb) |
+| 10 | [Switch Transformer](./10_switch_transformer/) | Any | O(N²) | Mixture of Experts (MoE) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb) |
 
 ---
 
@@ -94,8 +94,7 @@ Click any Colab badge above to start training immediately!
 ### Local Setup
 ```bash
 git clone https://github.com/gaurav-redhat/transformer_problems.git
-cd transformer_problems
-git checkout transformer
+cd transformer_problems/transformer_architectures
 pip install torch matplotlib numpy
 ```
 

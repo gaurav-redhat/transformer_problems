@@ -66,6 +66,33 @@ Whether you're a student trying to understand transformers, an engineer deployin
 
 ---
 
+## 🤖 Transformer Architectures
+
+Want to understand how different transformer variants work? We've got complete implementations with training code!
+
+<p align="center">
+  <a href="./transformer_architectures/">
+    <img src="./transformer_architectures/banner.png" alt="Transformer Architectures" width="80%"/>
+  </a>
+</p>
+
+| # | Architecture | Type | Complexity | Key Innovation | Colab |
+|---|--------------|------|------------|----------------|-------|
+| 01 | [Vanilla Transformer](./transformer_architectures/01_vanilla_transformer/) | Encoder-Decoder | O(N²) | Self-attention | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/01_vanilla_transformer/demo.ipynb) |
+| 02 | [BERT](./transformer_architectures/02_bert/) | Encoder | O(N²) | Bidirectional MLM | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/02_bert/demo.ipynb) |
+| 03 | [GPT](./transformer_architectures/03_gpt/) | Decoder | O(N²) | Autoregressive | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/03_gpt/demo.ipynb) |
+| 04 | [Vision Transformer](./transformer_architectures/04_vision_transformer/) | Encoder | O(N²) | Patches as tokens | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/04_vision_transformer/demo.ipynb) |
+| 05 | [Transformer-XL](./transformer_architectures/05_transformer_xl/) | Decoder | O(N²) | Segment recurrence | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/05_transformer_xl/demo.ipynb) |
+| 06 | [Sparse Transformer](./transformer_architectures/06_sparse_transformer/) | Any | O(N√N) | Sparse patterns | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/06_sparse_transformer/demo.ipynb) |
+| 07 | [Performer](./transformer_architectures/07_performer/) | Any | O(N) | FAVOR+ | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/07_performer/demo.ipynb) |
+| 08 | [Reformer](./transformer_architectures/08_reformer/) | Any | O(N log N) | LSH attention | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/08_reformer/demo.ipynb) |
+| 09 | [Longformer](./transformer_architectures/09_longformer/) | Encoder | O(N) | Local + global | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/09_longformer/demo.ipynb) |
+| 10 | [Switch Transformer](./transformer_architectures/10_switch_transformer/) | Any | O(N²) | MoE experts | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/transformer_architectures/10_switch_transformer/demo.ipynb) |
+
+👉 **[See Full Guide →](./transformer_architectures/)**
+
+---
+
 ## Quick Links
 
 Jump to any problem:
