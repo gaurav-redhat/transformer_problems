@@ -2,6 +2,8 @@
 
 [← Back to Main](../README.md) | [Next: Positional Awareness →](../02_positional_awareness/README.md)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gaurav-redhat/transformer_problems/blob/main/01_quadratic_complexity/demo.ipynb)
+
 ---
 
 ![Problem 1](./problem.png)
