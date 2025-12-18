@@ -1,223 +1,131 @@
-# 🤖 Transformer Problems
+# Transformer Problems
 
-A comprehensive collection documenting **18 key limitations** of the Transformer architecture and their solutions.
+A practical guide to the 18 biggest limitations of transformer architectures — and how researchers are fixing them.
 
-Each problem includes a visual infographic and detailed documentation with references to relevant research papers.
-
----
-
-## 📋 Table of Contents
-
-| # | Problem | Category |
-|---|---------|----------|
-| [01](#01-quadratic-complexity-on²) | Quadratic Complexity O(N²) | Efficiency |
-| [02](#02-no-positional-awareness) | No Positional Awareness | Architecture |
-| [03](#03-fixed-context-window) | Fixed Context Window | Memory |
-| [04](#04-slow-autoregressive-decoding) | Slow Autoregressive Decoding | Inference |
-| [05](#05-no-local-inductive-bias) | No Local Inductive Bias | Architecture |
-| [06](#06-data-hungry-architecture) | Data-Hungry Architecture | Training |
-| [07](#07-high-memory-footprint) | High Memory Footprint | Efficiency |
-| [08](#08-high-compute--power-cost) | High Compute & Power Cost | Efficiency |
-| [09](#09-poor-length-generalization) | Poor Length Generalization | Generalization |
-| [10](#10-training-instability) | Training Instability | Training |
-| [11](#11-attention-over-smoothing) | Attention Over-Smoothing | Architecture |
-| [12](#12-no-recurrence--streaming) | No Recurrence / Streaming | Architecture |
-| [13](#13-large-model-size) | Large Model Size | Deployment |
-| [14](#14-sensitivity-to-noise-tokens) | Sensitivity to Noise Tokens | Robustness |
-| [15](#15-poor-interpretability) | Poor Interpretability | Explainability |
-| [16](#16-inefficient-for-dense-inputs) | Inefficient for Dense Inputs | Vision/Video |
-| [17](#17-hardware-inefficiency) | Hardware Inefficiency | Efficiency |
-| [18](#18-real-time-deployment) | Real-Time Deployment | Deployment |
+If you've ever wondered why LLMs are slow, expensive, or can't remember your conversation from yesterday, you're in the right place.
 
 ---
 
-## 🔍 Problems Overview
+## Why This Exists
 
-### 01. Quadratic Complexity O(N²)
+Transformers power everything from ChatGPT to image generators. But they come with real limitations that affect how we build and deploy AI systems. This repo documents each problem with:
 
-![Problem 01](./01_quadratic_complexity/problem.png)
+- Visual explanations (infographics)
+- Plain English descriptions (no jargon soup)
+- Practical solutions being used today
+- Links to the key papers
 
-📁 [View Details](./01_quadratic_complexity/)
-
----
-
-### 02. No Positional Awareness
-
-![Problem 02](./02_positional_awareness/problem.png)
-
-📁 [View Details](./02_positional_awareness/)
+Whether you're a student trying to understand transformers, an engineer deploying them, or a researcher working on improvements — this is for you.
 
 ---
 
-### 03. Fixed Context Window
+## The Problems
 
-![Problem 03](./03_fixed_context/problem.png)
+### Efficiency Issues
 
-📁 [View Details](./03_fixed_context/)
+| # | Problem | One-Line Summary |
+|---|---------|------------------|
+| 1 | [Quadratic Complexity](./01_quadratic_complexity/) | Attention is O(N²) — double your sequence, quadruple your compute |
+| 7 | [Memory Footprint](./07_memory_footprint/) | KV cache and activations eat your GPU memory |
+| 8 | [Compute Cost](./08_compute_cost/) | Training GPT-3 cost $4.6 million |
+| 17 | [Hardware Inefficiency](./17_hardware_inefficiency/) | GPUs sit idle waiting for memory |
 
----
+### Architecture Limitations  
 
-### 04. Slow Autoregressive Decoding
+| # | Problem | One-Line Summary |
+|---|---------|------------------|
+| 2 | [No Positional Awareness](./02_positional_awareness/) | "Dog bites man" = "Man bites dog" without PE |
+| 5 | [No Local Bias](./05_local_bias/) | Doesn't know nearby pixels matter more |
+| 11 | [Attention Smoothing](./11_attention_smoothing/) | Deep layers make all tokens look the same |
+| 12 | [No Recurrence](./12_no_recurrence/) | Can't stream — needs all tokens first |
 
-![Problem 04](./04_slow_decoding/problem.png)
+### Scaling Challenges
 
-📁 [View Details](./04_slow_decoding/)
+| # | Problem | One-Line Summary |
+|---|---------|------------------|
+| 3 | [Fixed Context](./03_fixed_context/) | Hard limit on how much it can "remember" |
+| 6 | [Data Hungry](./06_data_hungry/) | Needs 100x more data than CNNs |
+| 9 | [Length Generalization](./09_length_generalization/) | Trained on 4K tokens, breaks at 8K |
+| 13 | [Model Size](./13_model_size/) | 175B parameters = 350GB of weights |
 
----
+### Training & Quality
 
-### 05. No Local Inductive Bias
+| # | Problem | One-Line Summary |
+|---|---------|------------------|
+| 10 | [Training Instability](./10_training_instability/) | Loss spikes and divergence at scale |
+| 14 | [Noise Sensitivity](./14_noise_sensitivity/) | Wastes capacity attending to padding tokens |
+| 15 | [Interpretability](./15_interpretability/) | Attention weights don't explain decisions |
 
-![Problem 05](./05_local_bias/problem.png)
+### Deployment
 
-📁 [View Details](./05_local_bias/)
-
----
-
-### 06. Data-Hungry Architecture
-
-![Problem 06](./06_data_hungry/problem.png)
-
-📁 [View Details](./06_data_hungry/)
-
----
-
-### 07. High Memory Footprint
-
-![Problem 07](./07_memory_footprint/problem.png)
-
-📁 [View Details](./07_memory_footprint/)
-
----
-
-### 08. High Compute & Power Cost
-
-![Problem 08](./08_compute_cost/problem.png)
-
-📁 [View Details](./08_compute_cost/)
-
----
-
-### 09. Poor Length Generalization
-
-![Problem 09](./09_length_generalization/problem.png)
-
-📁 [View Details](./09_length_generalization/)
+| # | Problem | One-Line Summary |
+|---|---------|------------------|
+| 4 | [Slow Decoding](./04_slow_decoding/) | Generates one token at a time |
+| 16 | [Dense Inputs](./16_dense_inputs/) | Images become thousands of tokens |
+| 18 | [Real-Time](./18_realtime_deployment/) | Too slow for voice assistants and games |
 
 ---
 
-### 10. Training Instability
+## Quick Links
 
-![Problem 10](./10_training_instability/problem.png)
+Jump to any problem:
 
-📁 [View Details](./10_training_instability/)
-
----
-
-### 11. Attention Over-Smoothing
-
-![Problem 11](./11_attention_smoothing/problem.png)
-
-📁 [View Details](./11_attention_smoothing/)
-
----
-
-### 12. No Recurrence / Streaming
-
-![Problem 12](./12_no_recurrence/problem.png)
-
-📁 [View Details](./12_no_recurrence/)
-
----
-
-### 13. Large Model Size
-
-![Problem 13](./13_model_size/problem.png)
-
-📁 [View Details](./13_model_size/)
+1. [Quadratic Complexity O(N²)](./01_quadratic_complexity/)
+2. [No Positional Awareness](./02_positional_awareness/)
+3. [Fixed Context Window](./03_fixed_context/)
+4. [Slow Autoregressive Decoding](./04_slow_decoding/)
+5. [No Local Inductive Bias](./05_local_bias/)
+6. [Data-Hungry Architecture](./06_data_hungry/)
+7. [High Memory Footprint](./07_memory_footprint/)
+8. [High Compute & Power Cost](./08_compute_cost/)
+9. [Poor Length Generalization](./09_length_generalization/)
+10. [Training Instability](./10_training_instability/)
+11. [Attention Over-Smoothing](./11_attention_smoothing/)
+12. [No Recurrence / Streaming](./12_no_recurrence/)
+13. [Large Model Size](./13_model_size/)
+14. [Sensitivity to Noise Tokens](./14_noise_sensitivity/)
+15. [Poor Interpretability](./15_interpretability/)
+16. [Inefficient for Dense Inputs](./16_dense_inputs/)
+17. [Hardware Inefficiency](./17_hardware_inefficiency/)
+18. [Real-Time Deployment](./18_realtime_deployment/)
 
 ---
 
-### 14. Sensitivity to Noise Tokens
+## Regenerate Images
 
-![Problem 14](./14_noise_sensitivity/problem.png)
-
-📁 [View Details](./14_noise_sensitivity/)
-
----
-
-### 15. Poor Interpretability
-
-![Problem 15](./15_interpretability/problem.png)
-
-📁 [View Details](./15_interpretability/)
-
----
-
-### 16. Inefficient for Dense Inputs
-
-![Problem 16](./16_dense_inputs/problem.png)
-
-📁 [View Details](./16_dense_inputs/)
-
----
-
-### 17. Hardware Inefficiency
-
-![Problem 17](./17_hardware_inefficiency/problem.png)
-
-📁 [View Details](./17_hardware_inefficiency/)
-
----
-
-### 18. Real-Time Deployment
-
-![Problem 18](./18_realtime_deployment/problem.png)
-
-📁 [View Details](./18_realtime_deployment/)
-
----
-
-## 🛠️ Generate Images
-
-To regenerate all infographic images, run:
+Each problem folder has a `problem.png` infographic. To regenerate all of them:
 
 ```bash
 python generate_images.py
 ```
 
-Requirements:
-- Python 3.7+
-- matplotlib
+Requires Python 3.7+ and matplotlib.
 
 ---
 
-## 📚 Key References
+## Key Papers
 
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) - Original Transformer paper
-- [BERT](https://arxiv.org/abs/1810.04805) - Bidirectional Encoder Representations
-- [GPT-3](https://arxiv.org/abs/2005.14165) - Language Models are Few-Shot Learners
-- [FlashAttention](https://arxiv.org/abs/2205.14135) - Fast and Memory-Efficient Attention
-- [LoRA](https://arxiv.org/abs/2106.09685) - Low-Rank Adaptation
-- [Mamba](https://arxiv.org/abs/2312.00752) - Linear-Time Sequence Modeling
+If you want to go deeper, start with these:
 
----
-
-## 📄 License
-
-MIT License - See [LICENSE](./LICENSE) for details.
+- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — The original transformer
+- [FlashAttention](https://arxiv.org/abs/2205.14135) — Solving the memory problem
+- [RoPE](https://arxiv.org/abs/2104.09864) — Better position encoding
+- [LoRA](https://arxiv.org/abs/2106.09685) — Training giant models affordably
+- [Mamba](https://arxiv.org/abs/2312.00752) — The SSM alternative
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Feel free to:
-- Add new transformer problems
-- Improve solution descriptions
+Found an error? Know a better solution? PRs welcome.
+
+- Add new problems
+- Improve explanations
+- Fix inaccuracies
 - Add more references
-- Fix any errors
 
 ---
 
-<p align="center">
-  <b>⭐ Star this repo if you find it useful!</b>
-</p>
+## License
+
+MIT — use this however you want.
